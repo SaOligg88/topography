@@ -1,0 +1,23 @@
+function[dataOut] = ConvertTo32k(sub, name, data)
+
+filename = [num2str(sub) '.L.' name];
+
+aparc = gifti(['/scr/dattel2/' num2str(sub) '/MNINonLinear/Native/' num2str(sub) ...
+'.L.aparc.a2009s.native.label.gii']);
+cifti = aparc;
+cifti.cdata = data;
+save(cifti,[filename '.shape.gii'],'ExternalFileBinary')
+
+subDir = ['/a/documents/connectome/_all/' num2str(sub) '/'];
+unix(['/scr/litauen1/connectome_wb/workbench/bin_linux64/wb_command -metric-resample ' ...
+    filename '.shape.gii ' subDir 'MNINonLinear/Native/' num2str(sub) '.L.sphere.MSMSulc.native.surf.gii ' ...
+    subDir 'MNINonLinear/fsaverage_LR32k/' num2str(sub) '.L.sphere.32k_fs_LR.surf.gii ' ...
+    'ADAP_BARY_AREA ' ...
+    filename '.32k.shape.gii ' '-area-surfs ' ...
+    subDir 'T1w/Native/' num2str(sub) '.L.midthickness.native.surf.gii ' ...
+    subDir 'MNINonLinear/fsaverage_LR32k/' num2str(sub) '.L.midthickness.32k_fs_LR.surf.gii']);
+
+dataOut = gifti([filename '.32k.shape.gii']);
+dataOut = dataOut.cdata;
+
+%unix(['rm *.dat']);
