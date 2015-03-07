@@ -3,9 +3,10 @@ function[clus, countC, randpath] = DoPaths(n)
 % set to 0 to not run any purmutations
 %
 
+addpath('./utils');
 %% Load yeo preconfigured:
 thresh=2;
-[surf, surfi, surfm, label] = DoHCPsurf_group('L', 2);
+[surf, surfi, surfm, label] = loadHCPsurf_group('L', 2);
 
 edg = SurfStatEdg(surf);
 lab = [1 2 3 4 6 7 8 9 10 11 13 14 15 16 17]; % skipping 5 and 12
@@ -66,7 +67,6 @@ for i = 1:length(lab)-1
 end
 
 if n > 0
-	addpath('./utils');
 	randPath = pathsPermute(clus, n);
 else
 	randPath = [];
