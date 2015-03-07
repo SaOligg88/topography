@@ -1,10 +1,11 @@
-function[surf] = LoadHCPsurf(num)
+function[surf] = LoadHCPsurf_individuals(num)
 
+addpath('./utils/surfstat/*');
 List=dir('/a/documents/connectome/_all/');
+
 for i = 1:length(List)-2
     ListSub(i,:) = List(i+2).name;
 end
-
 sub = ListSub(num);
 
 % import surface:

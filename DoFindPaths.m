@@ -1,8 +1,17 @@
-function[clus, countC, randpath] = DoPaths(surf, label, thresh, n)
+function[clus, countC, randpath] = DoPaths(n)
+% n = number of permutations
+% set to 0 to not run any purmutations
+%
 
-%thresh=2;
+%% Load yeo preconfigured:
+thresh=2;
+[surf, surfi, surfm, label] = DoHCPsurf_group('L', 2);
+
 edg = SurfStatEdg(surf);
-lab = [1 2 3 4 6 7 8 9 10 11 13 14 15 16 17];
+lab = [1 2 3 4 6 7 8 9 10 11 13 14 15 16 17]; % skipping 5 and 12
+
+%%%%%%%%% Begin %%%%%%%%%
+addpath('./utils/surfstat/*');
 slm = struct();
 slm.tri = surf.tri';
 
@@ -56,9 +65,12 @@ for i = 1:length(lab)-1
     end
 end
 
-addpath('./utils');
-[randPath] = pathsPermute(clus, n);
-
+if n > 0
+	addpath('./utils');
+	randPath = pathsPermute(clus, n);
+else
+	randPath = [];
+end
 
 
         
