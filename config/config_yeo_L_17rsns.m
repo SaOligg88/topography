@@ -1,3 +1,5 @@
+function[thresh, surf, surfi, surfm, label, edg, lab] = config_yeo_L_17rsns();
+
 thresh=2;
 [surf, surfi, surfm, label] = loadHCPsurf_group('L', 2);
 

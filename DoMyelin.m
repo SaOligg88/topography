@@ -11,7 +11,6 @@ myelin = loadMyelin_group(hemi);
 [surf, surfi, surfm, lab] = loadHCPsurf_group(hemi, ,maskRSN);
 edg = SurfStatEdg(surf);
 
-
 slm = struct();
 slm.tri = surf.tri';
 
