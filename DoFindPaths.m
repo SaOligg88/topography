@@ -3,12 +3,11 @@ function[clus, countC, randpath] = DoPaths(n)
 % set to 0 to not run any purmutations
 %
 
-addpath('./utils');
+addpath(genpath('./utils'));
 %% Load yeo preconfigured:
 load config_yeo_L_17rsns.m
 
 %%%%%%%%% Begin %%%%%%%%%
-addpath('./utils/surfstat/*');
 slm = struct();
 slm.tri = surf.tri';
 

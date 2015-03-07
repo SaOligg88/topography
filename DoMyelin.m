@@ -1,5 +1,4 @@
-addpath('utils/surfstat/*');
-addpath('utils');
+addpath(genpath('./utils'));
 
 %% variables: 
 hemi = 'L'; % or: 'R'
