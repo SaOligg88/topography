@@ -1,7 +1,8 @@
 function[surfm, vert] = DoFiguresTopos()
 
-addpath('~/Downloads/cbrewer');
-addpath('../topology_hcp');
+addpath('./utils');
+addpath('./utils/cbrewer');
+addpath('./utils/surfstat');
 
 %% variables: 
 hemi = 'L';
