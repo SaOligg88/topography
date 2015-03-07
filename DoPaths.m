@@ -1,5 +1,4 @@
-function[clus, countC] = DoPaths(surf,label, thresh)
-
+function[clus, countC, randpath] = DoPaths(surf, label, thresh, n)
 
 %thresh=2;
 edg = SurfStatEdg(surf);
@@ -56,8 +55,9 @@ for i = 1:length(lab)-1
         end
     end
 end
-      
-%% Connectivity analysis:
+
+addpath('./utils');
+[randPath] = pathsPermute(clus, n);
 
 
 
