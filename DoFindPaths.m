@@ -62,6 +62,8 @@ for i = 1:length(lab)-1
     end
 end
 
+save('data/clus.mat', '-v7.3', 'clus');
+
 if n > 0
 	randPath = pathsPermute(clus, n);
 else
