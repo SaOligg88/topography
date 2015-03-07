@@ -9,7 +9,7 @@ addpath(genpath('./utils'));
 
 %%%%%%%%% Begin %%%%%%%%%
 
-clus = findPathsHCP(label, thresh, hemi);
+clus = pathsFindHCP(label, thresh, hemi);
 
 % save('data/clus.mat', '-v7.3', 'clus');
 
