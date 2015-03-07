@@ -9,7 +9,6 @@
 where `n` is the number of permutations,
 and a config file is loaded in the script.
 
-
 ### embedding.py ###
 
 To create cluster results based on individual connectivity matrices:
@@ -25,6 +24,14 @@ To find most common paths through a cluster map.
 
 ## Distance maps ##
 
-### Calculating distance from DMN ###
+### Calculating distance from DMN on the group-level ###
 	
+`[distDMN] = loadDistDMN_group(hemi);`
 
+### Comparing to myelin maps ###
+
+`DoMyelin();`
+
+### Calculating distance from DMN on the individual-level ###
+
+`[distDMN] = loadDistDMN_individual(sub, hemi)`

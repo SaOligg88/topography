@@ -1,4 +1,4 @@
-function [dist, zone] = exactGeodesic(source, surfType, hemi, analysisType)
+function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType)
 % source = source node ids
 % surfType = '32' or '164'
 % hemi = 'L' or 'R'
