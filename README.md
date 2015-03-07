@@ -2,29 +2,29 @@
 
 ## Paths through cluster results: ##
 
-	### DoFindPaths.m ###
+### DoFindPaths.m ###
 
-		`[clus, countC, randpath] = DoPaths(n);`
+	`[clus, countC, randpath] = DoPaths(n);`
 
-		where `n` is the number of permutations,
-		and a config file is loaded in the script.
+	where `n` is the number of permutations,
+	and a config file is loaded in the script.
 
 
-	### embedding.py ###
+### embedding.py ###
 
-		To create cluster results based on individual connectivity matrices:
+	To create cluster results based on individual connectivity matrices:
 
-		`embedding.py -s <subject> -f <output filebasename>`
+	`embedding.py -s <subject> -f <output filebasename>`
 
-		where input is a connectivity matrix saved as a .mat file.
+	where input is a connectivity matrix saved as a .mat file.
 
-	### find_similar_paths.py ###
+### find_similar_paths.py ###
 
-		To find most common paths through a cluster map.
+	To find most common paths through a cluster map.
 
 
 ## Distance maps ##
 
-	### Calculating distance from DMN ###
+### Calculating distance from DMN ###
 	
 
