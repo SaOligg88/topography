@@ -1,0 +1,106 @@
+from nipype.pipeline.engine import Workflow, Node, MapNode
+from nipype.interfaces.utility import IdentityInterface
+from nipype.interfaces.io import DataGrabber
+from nipype.interfaces.c3 import C3dAffineTool
+from nipype.interfaces.utility import Merge
+from nipype.interfaces.ants.resampling import WarpTimeSeriesImageMultiTransform
+from nipype.interfaces.io import DataSink
+# Functions
+def getsubstitutions(subject_id):
+    subs=[('_subject_id_%s'%subject_id, '')]
+    for i in range(200,-1,-1):
+        subs.append(('_warp_images%d'%i, ''))
+    subs.append(('_fwhm','fwhm'))
+    subs.append(('_apply_transforms0/',"wm/"))
+    subs.append(('_apply_transforms1/',"gm/"))
+    subs.append(('_apply_transforms2/',"csf/"))
+    return subs
+def get_image_dimensions(images):
+    """Return dimensions of list of images
+
+    Parameters
+    ----------
+    images : list of filenames
+
+    Returns
+    -------
+    list : returns dimensions of input image list
+    """
+    import nibabel as nb
+
+    if isinstance(images, list):
+        dims = []
+        for image in images:
+            dims.append(len(nb.load(image).get_shape()))
+    else:
+        dims = len(nb.load(images).get_shape())
+    return dims
+# Workflow
+normalize_post_struct = Workflow("normalize_post_struct")
+# Node: normalize_post_struct.custom_datagrabber.subject_id_iterable
+normalize_post_struct_custom_datagrabber_subject_id_iterable = Node(IdentityInterface(fields=['subject_id'], mandatory_inputs=True), name="normalize_post_struct_custom_datagrabber_subject_id_iterable")
+normalize_post_struct_custom_datagrabber_subject_id_iterable.iterables = ('subject_id', ['LEMON003'])
+# Node: normalize_post_struct.custom_datagrabber.datagrabber
+normalize_post_struct_custom_datagrabber_datagrabber = Node(DataGrabber(infields=['subject_id', ''], outfields=['inputs', 'meanfunc', 'fsl_mat', 'warp_field', 'unwarped_brain', 'affine_transformation']), name="normalize_post_struct_custom_datagrabber_datagrabber")
+normalize_post_struct_custom_datagrabber_datagrabber.inputs. = []
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.base_directory = '/scr/ilz2/jgolchert/Lemondata'
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.field_template = {'inputs': 'lemon_rspreproc/resultsdir/%s/preproc/output/bandpassed/fwhm_0.0/*_r00_afni_bandpassed.nii*', 'fsl_mat': 'lemon_rspreproc/resultsdir/%s/preproc/bbreg/*_register.mat', 'unwarped_brain': 'lemon_normalization/resultsdir/%s/smri/unwarped_brain/*.nii*', 'meanfunc': 'lemon_rspreproc/resultsdir/%s/preproc/mean/afni_rest_orig_roi_tshift.nii*', 'warp_field': 'lemon_normalization/resultsdir/%s/smri/warped_field/*.nii*', 'affine_transformation': 'lemon_normalization/resultsdir/%s/smri/affine_transformation/*.txt'}
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.ignore_exception = False
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.raise_on_empty = True
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.sort_filelist = True
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.template = '*'
+normalize_post_struct_custom_datagrabber_datagrabber.inputs.template_args = {'inputs': [['subject_id']], 'fsl_mat': [['subject_id']], 'warp_field': [['subject_id']], 'meanfunc': [['subject_id']], 'unwarped_brain': [['subject_id']], 'affine_transformation': [['subject_id']]}
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_subject_id_iterable, "subject_id", normalize_post_struct_custom_datagrabber_datagrabber, "subject_id")
+# Node: normalize_post_struct.inputspec
+normalize_post_struct_inputspec = Node(IdentityInterface(fields=['template_file', 'unwarped_brain', 'warp_field', 'affine_transformation', 'out_fsl_file', 'moving_image', 'mean_func', 'use_nearest'], mandatory_inputs=True), name="normalize_post_struct_inputspec")
+normalize_post_struct_inputspec.inputs.template_file = '/scr/lahn1/template/MNI152_T1_1mm_brain.nii.gz'
+normalize_post_struct_inputspec.inputs.use_nearest = False
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "fsl_mat", normalize_post_struct_inputspec, "out_fsl_file")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "inputs", normalize_post_struct_inputspec, "moving_image")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "meanfunc", normalize_post_struct_inputspec, "mean_func")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "warp_field", normalize_post_struct_inputspec, "warp_field")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "affine_transformation", normalize_post_struct_inputspec, "affine_transformation")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_datagrabber, "unwarped_brain", normalize_post_struct_inputspec, "unwarped_brain")
+# Node: normalize_post_struct.fsl_reg_2_itk
+normalize_post_struct_fsl_reg_2_itk = Node(C3dAffineTool(), name="normalize_post_struct_fsl_reg_2_itk")
+normalize_post_struct_fsl_reg_2_itk.inputs.environ = {}
+normalize_post_struct_fsl_reg_2_itk.inputs.fsl2ras = True
+normalize_post_struct_fsl_reg_2_itk.inputs.ignore_exception = False
+normalize_post_struct_fsl_reg_2_itk.inputs.terminal_output = 'stream'
+normalize_post_struct.connect(normalize_post_struct_inputspec, "unwarped_brain", normalize_post_struct_fsl_reg_2_itk, "reference_file")
+normalize_post_struct.connect(normalize_post_struct_inputspec, "out_fsl_file", normalize_post_struct_fsl_reg_2_itk, "transform_file")
+normalize_post_struct.connect(normalize_post_struct_inputspec, "mean_func", normalize_post_struct_fsl_reg_2_itk, "source_file")
+# Node: normalize_post_struct.collect_transforms
+normalize_post_struct_collect_transforms = Node(Merge(numinputs=3), name="normalize_post_struct_collect_transforms")
+normalize_post_struct_collect_transforms.inputs.axis = 'vstack'
+normalize_post_struct_collect_transforms.inputs.ignore_exception = False
+normalize_post_struct_collect_transforms.inputs.no_flatten = False
+normalize_post_struct.connect(normalize_post_struct_inputspec, "warp_field", normalize_post_struct_collect_transforms, "in1")
+normalize_post_struct.connect(normalize_post_struct_inputspec, "affine_transformation", normalize_post_struct_collect_transforms, "in2")
+normalize_post_struct.connect(normalize_post_struct_fsl_reg_2_itk, "itk_transform", normalize_post_struct_collect_transforms, "in3")
+# Node: normalize_post_struct.warp_images
+normalize_post_struct_warp_images = MapNode(WarpTimeSeriesImageMultiTransform(), iterfield=['input_image', 'dimension'], name="normalize_post_struct_warp_images")
+normalize_post_struct_warp_images.inputs.dimension = [4]
+normalize_post_struct_warp_images.inputs.environ = {'NSLOTS': '1'}
+normalize_post_struct_warp_images.inputs.ignore_exception = False
+normalize_post_struct_warp_images.inputs.num_threads = 1
+normalize_post_struct_warp_images.inputs.out_postfix = '_wtsimt'
+normalize_post_struct_warp_images.inputs.terminal_output = 'stream'
+normalize_post_struct.connect(normalize_post_struct_inputspec, "moving_image", normalize_post_struct_warp_images, "input_image")
+normalize_post_struct.connect(normalize_post_struct_inputspec, ('moving_image', get_image_dimensions), normalize_post_struct_warp_images, "dimension")
+normalize_post_struct.connect(normalize_post_struct_inputspec, "template_file", normalize_post_struct_warp_images, "reference_image")
+normalize_post_struct.connect(normalize_post_struct_inputspec, "use_nearest", normalize_post_struct_warp_images, "use_nearest")
+normalize_post_struct.connect(normalize_post_struct_collect_transforms, "out", normalize_post_struct_warp_images, "transformation_series")
+# Node: normalize_post_struct.outputspec
+normalize_post_struct_outputspec = Node(IdentityInterface(fields=['warped_image'], mandatory_inputs=True), name="normalize_post_struct_outputspec")
+normalize_post_struct.connect(normalize_post_struct_warp_images, "output_image", normalize_post_struct_outputspec, "warped_image")
+# Node: normalize_post_struct.sinkd
+normalize_post_struct_sinkd = Node(DataSink(infields=None), name="normalize_post_struct_sinkd")
+normalize_post_struct_sinkd.inputs._outputs = {}
+normalize_post_struct_sinkd.inputs.base_directory = '/scr/ilz2/jgolchert/Lemondata/lemon_normalization/resultsdir'
+normalize_post_struct_sinkd.inputs.ignore_exception = False
+normalize_post_struct_sinkd.inputs.parameterization = True
+normalize_post_struct_sinkd.inputs.remove_dest_dir = False
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_subject_id_iterable, "subject_id", normalize_post_struct_sinkd, "container")
+normalize_post_struct.connect(normalize_post_struct_custom_datagrabber_subject_id_iterable, ('subject_id', getsubstitutions), normalize_post_struct_sinkd, "substitutions")
+normalize_post_struct.connect(normalize_post_struct_outputspec, "warped_image", normalize_post_struct_sinkd, "smri.warped_image")

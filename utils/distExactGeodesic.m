@@ -7,11 +7,13 @@ function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, 
 addpath('/scr/litauen1/Dropbox/misc/yeoTopo/lme/geodesic/')
 
 if surfType == '32'
-	surf = gifti(['/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.' ...
-		hemi '.midthickness.32k_fs_LR.surf.gii']);
-	sub = num2str(100307);
-	aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub ...
-		'.' hemi '.aparc.a2009s.32k_fs_LR.label.gii']);
+%	surf = gifti(['/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.' ...
+%		hemi '.midthickness.32k_fs_LR.surf.gii']);
+%	sub = num2str(100307);
+%	aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub ...
+%		'.' hemi '.aparc.a2009s.32k_fs_LR.label.gii']);
+	surf = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii')
+	aparc = gifti('data/lh.aparc.gii')
 	aparc = aparc.cdata;
 	noncortex = find(aparc == 0);
 
@@ -21,7 +23,7 @@ if surfType == '32'
     		27785; 27786; 27793; 27799; 27804; 27809; 27805; 27799; 27800; 27806; 27810; 27810 ]);
 	end
 	
-elif surfType == '164'
+elseif surfType == '164'
 	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.midthickness.164k_fs_LR.surf.gii'];
 	surf = gifti(filename);
 	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.very_inflated.164k_fs_LR.surf.gii'];

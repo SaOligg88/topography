@@ -1,0 +1,8 @@
+
+mesh has 29931 vertices, 59602 faces, 89532 edges
+258 edges are boundary edges
+shortest/longest edges are 0.544766/2.83137 = 0.192403
+enclosing XYZ box: X[-68.3924,0.118535] Y[-104.997,71.71] Z[-47.4162,78.329]
+approximate diameter of the mesh is 227.444
+min/max face angles are 12.9021/133.54 degrees
+

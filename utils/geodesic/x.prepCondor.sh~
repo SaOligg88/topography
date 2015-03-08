@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+for i in $(seq 1 29930); 
+do
+	echo "arguments = /scr/litauen1/Dropbox/misc/yeoTopo/lme/geodesic/exactgeodesic/surf.patch.asc ${i}" >> subcommand.txt 
+	echo "output = /scr/litauen2/projects/distance/condor/${i}.out" >> subcommand.txt
+	echo "error = /scr/litauen2/projects/distance/condor/${i}.error" >> subcommand.txt
+	echo "queue" >> subcommand.txt
+	echo "" >> subcommand.txt
+done

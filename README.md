@@ -43,7 +43,9 @@ To find most common paths through a cluster map.
 	
 	[distDMN] = loadDistDMN_group(hemi);
 
-New peaks can also be derived from `clus.peaks(find(clus.networks == XX))`
+New peaks can also be derived from `clus.peaks(find(clus.edgeNet == 13))`
+
+	[dist, zone] = distExactGeodesic(clus.peaks(find(clus.edgeNet == 13)), '32', 'L', 'zones', '1');
 
 where `XX = DMN network from cluster results` 
 

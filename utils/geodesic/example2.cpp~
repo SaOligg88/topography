@@ -1,0 +1,58 @@
+#include <iostream>
+#include <fstream>
+#include "geodesic_algorithm_exact.h"
+#include <sstream>
+using namespace std;
+
+int main(int argc, char **argv) 
+{
+	std::vector<double> points;	
+	std::vector<unsigned> faces;
+	bool success = geodesic::read_mesh_from_file(argv[1],points,faces);
+	geodesic::Mesh mesh;
+	mesh.initialize_mesh_data(points, faces);		//create internal mesh data structure including edges
+	geodesic::GeodesicAlgorithmExact algorithm(&mesh);	//create exact algorithm for the mesh
+	//double distanceAll[10][mesh.vertices().size()];
+	//double distanceAll[mesh.vertices().size()];
+ 
+	//for(unsigned source_vertex_index=0; source_vertex_index<10; ++source_vertex_index)//mesh.vertices().size()
+	//{
+	
+	const char *path="/scr/litauen2/projects/distance/condor/";
+    	std::ostringstream fileNameStream("");
+    	fileNameStream << path << argv[2] << ".txt";
+	std::string fileName = fileNameStream.str();
+	
+	ofstream outputFile;
+	outputFile.open(fileName.c_str());
+
+	unsigned source_vertex_index = atol(argv[2]);	
+	geodesic::SurfacePoint source(&mesh.vertices()[source_vertex_index]);
+	std::vector<geodesic::SurfacePoint> all_sources(1,source);
+	algorithm.propagate(all_sources);	
+	for(unsigned i=0; i<mesh.vertices().size(); ++i) 
+	{
+		geodesic::SurfacePoint p(&mesh.vertices()[i]);		
+		//unsigned best_source = algorithm.best_source(p,distanceAll[source_vertex_index][i]);
+		double distance;
+		unsigned best_source = algorithm.best_source(p,distance);
+		const char *di = distance;
+		outputFile.write(di,10);	
+		std::cout << distance << std::endl;
+	}
+	
+	//	std::cout << source_vertex_index << std::endl;
+	//}
+
+//for(unsigned source_vertex_index=0; source_vertex_index<10; ++source_vertex_index)//mesh.vertices().size()
+//{
+//	for(unsigned i=0; i<mesh.vertices().size(); ++i)
+//	{
+		//std::cout << distanceAll[source_vertex_index][i] << " ";		
+//		std::cout << distanceAll[source_vertex_index][i] << " ";		
+//	}
+//	std::cout << std::endl;
+//}
+outputFile.close();
+return 0;
+}	
