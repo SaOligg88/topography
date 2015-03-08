@@ -6,3 +6,4 @@ surf.coord = surf_gii.vertices'; surf.tri = surf_gii.faces;
 surf_gii = gifti([dir hemi '.very_inflated.32k_fs_LR.surf.gii']);
 surfi.coord = surf_gii.vertices'; surfi.tri = surf_gii.faces;
 surfm.tri = surf.tri; surfm.coord = (surfi.coord .* 0.8 + surf.coord .* 0.2);
+

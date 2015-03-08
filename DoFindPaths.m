@@ -1,4 +1,4 @@
-function[clus, randpath] = DoFindPaths(n)
+function[clus] = DoFindPaths()
 % n = number of permutations
 % set to 0 to not run any purmutations
 %
@@ -13,8 +13,4 @@ clus = pathsFindHCP(label, thresh, hemi);
 
 % save('data/clus.mat', '-v7.3', 'clus');
 
-if n > 0
-	randPath = pathsPermute(clus, n);
-else
-	randPath = [];
-end
+[matrix, s, ind] = threshGraph(clus);

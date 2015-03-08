@@ -6,10 +6,11 @@ function[clus] = findPathsHCP(label, thresh, hemi)
 % I generally set it somewhere between 0 and 2.
 
 addpath(genpath('./utils'));
-[surf, surfi, surfm] = DoHCPsurf_group(hemi);
+
+lab = nonzeros(unique(label));
+[surf, surfi, surfm] = loadHCPsurf_group(hemi);
 
 edg = SurfStatEdg(surf);
-lab = nonzeros(unique(label));
 clus.label = zeros(1,length(surf.coord));
 countC = 0;
 clus.label = zeros(1,length(surf.coord));
@@ -42,6 +43,8 @@ for i = 1:countC
     a = [edg(mem1,2); edg(mem2,1)];
     clus.edge(i,nonzeros(unique(clus.label(a)))) = 1;
 end
+clus.edge(find(eye(size(clus.edge)))) = 0;
+
 for i = 1:length(clus.edge)
     clus.edgeNet(i) = unique(clus.network(clus.label == i));
 end
@@ -60,7 +63,7 @@ end
 count = 1;
 for i = 1:length(lab)-1
     for j = i+1:length(lab)
-        score = ((clus.netScore(lab(i),lab(j)) + clus.netScore(lab(j),lab(i))) / 2);
+        score = ((clus.netScore(i,j) + clus.netScore(j,i)) / 2);
         if score ~= 0
             clus.score(count,:) = [lab(i) lab(j) score];
             count = count + 1;
