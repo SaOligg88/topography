@@ -1,4 +1,4 @@
-function[surf, surfi, surfm] = DoHCPsurf_group(hemi, maskRSN)
+function[surf, surfi, surfm] = DoHCPsurf_group(hemi)
 
 dir = '/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.';
 surf_gii = gifti([dir hemi '.midthickness.32k_fs_LR.surf.gii']);
