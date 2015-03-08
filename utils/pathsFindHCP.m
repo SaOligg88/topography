@@ -1,4 +1,4 @@
-function[clus] = findPathsHCP(label, thresh, hemi)
+function[clus] = findPathsHCP(label, thresh, hemi, surf)
 % 'label' is a vector of the length of the surface with integers denoting
 % groups. 
 % 'thresh' is equal to the minimum number of adjacent nodes that can
@@ -8,7 +8,7 @@ function[clus] = findPathsHCP(label, thresh, hemi)
 addpath(genpath('./utils'));
 
 lab = nonzeros(unique(label));
-[surf, surfi, surfm] = loadHCPsurf_group(hemi);
+% [surf, surfi, surfm] = loadHCPsurf_group(hemi);
 
 edg = SurfStatEdg(surf);
 clus.label = zeros(1,length(surf.coord));

@@ -1,4 +1,4 @@
-function[matrix, s, ind] = threshGraph(clus)
+function[matrix, s, ind, x, y] = threshGraph(clus)
 
 addpath(genpath('./utils'));
 
@@ -31,3 +31,30 @@ set(gca,'XTick',[1:length(s)]);
 set(gca,'XTickLabel',num2str(ind));
 xlim([0 length(s)+1]);
 
+%% plot smallest
+graph = edgeL2adj(clus.score) + edgeL2adj(clus.score)';
+[V,D]=eig(laplacian_matrix(graph));
+[ds,Y]=sort(diag(D));
+for j = 2;
+    fv=V(:,Y(j));
+    % boxcox transform
+    fv = boxcox(fv + 1);
+    [s,ind] = sort(fv);
+
+    a = zeros(length(surf.coord),1);
+    for i = 1:length(unique(nonzeros(label)))
+        a(find(label == i)) = (find(ind == i));
+    end
+    figure; SurfStatView(a, surf, [num2str(j)]);
+end
+
+%% Plot two smallest eigenvectors in scatterplot
+h = figure;
+x = boxcox(V(:,Y(2))+1); y = boxcox(V(:,Y(3))+1);
+x = abs(boxcox(V(:,Y(2))+1)); y = abs(boxcox(V(:,Y(3))+1));
+scatter(x,y,'.')
+a = [1:length(unique(nonzeros(label)))]'; b = num2str(a); c = cellstr(b);
+dx = 0.005; dy = 0.00; % displacement so the text does not overlay the data points
+text(x+dx, y+dy, c);
+xlim([min(x)-0.05 max(x)+0.05]);
+ylim([min(y)-0.05 max(y)+0.05]);
