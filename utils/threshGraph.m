@@ -1,14 +1,14 @@
 function[matrix] = threshGraph(graph)
 
+addpath(genpath('./utils'));
+
 thresh = [0:0.05:1];
-matrix = zeros(size(graph));
 for i = 1:length(thresh)
-	graphThreshed = zeros(size(graph));
-	graphThreshed = graph(find(graph > thresh(i)));
-	S = isConnected(graphThreshed);
+	graphThreshed = (graph > thresh(i)) .* graph;
+	S = isconnected(graphThreshed);
 	if S == 0
-		matrix = graph(find(graph > thresh(i-1)));
+		matrix = (graph > thresh(i - 1)) .* graph;
 		break; 
 	end
-	disp(i);
+	disp(thresh(i));
 end
