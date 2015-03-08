@@ -1,4 +1,4 @@
-function[] = DoIndividDMNdist(sub, hemi)
+function[distances, zones, surfi_164] = loadDistDMN_individual(sub, hemi)
 
 [surf, surfi, surfvi] = loadHCPsurf_individual(sub, hemi, '32')
 [surf_164, surfi_164, surfvi_164] = loadHCPsurf_individual(sub, hemi, '164');
@@ -24,7 +24,7 @@ end
 c = SurfStatInd2Coord(peaks, surfvi);
 inds = SurfStatCoord2Ind(c', surfvi_164);
     
-[distances,zones] = distExactGeodesic(inds, '164', hemi, 'zones');
+[distances,zones] = distExactGeodesic(inds, '164', hemi, 'zones', sub);
 
 figure; SurfStatView(distances, surfvi_164);
 figure; SurfStatView(zones, surfvi_164);

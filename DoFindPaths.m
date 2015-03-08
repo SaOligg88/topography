@@ -1,4 +1,4 @@
-function[clus, randpath] = DoPaths(n)
+function[clus, randpath] = DoFindPaths(n)
 % n = number of permutations
 % set to 0 to not run any purmutations
 %

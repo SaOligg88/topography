@@ -4,7 +4,7 @@
 
 ### DoFindPaths.m ###
 
-`[clus, countC, randpath] = DoPaths(n);`
+`[clus, randpath] = DoFindPaths(n);`
 
 where `n` is the number of permutations,
 and a config file is loaded in the script.
@@ -34,4 +34,5 @@ To find most common paths through a cluster map.
 
 ### Calculating distance from DMN on the individual-level ###
 
-`[distDMN] = loadDistDMN_individual(sub, hemi)`
+`[distances, zones, surfi_164] = loadDistDMN_individual(sub, hemi)`
+
