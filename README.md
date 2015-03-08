@@ -1,5 +1,8 @@
 # Topography scripts
 
+To set paths:
+
+	setpaths;
 
 ## Clustering ##
 
