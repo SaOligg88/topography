@@ -3,7 +3,7 @@ function[S] = myelin_regional_degree_centrality(mask, dt)
 % dt = 10; % distance threshold for 'regional' aspect in mm.
 % outputs 'S' 
 % example:
-% S = myelin_regional_degree_centrality([10115 10116 10117], 10);
+% S = myelin_regional_degree_centrality([10115 10116 10117 ...], 10);
 
 % load distance matrix	
 dist = load('/scr/litauen1/dist.hcp.lh.mat');
@@ -57,6 +57,7 @@ for i = 1:length(subList)
 		end
     end
 	% mean across four runs within individual:
+    % Rows are individuals, Columns are nodes from the mask.
 	S(i, :) = mean(Z,1);
 end
 
