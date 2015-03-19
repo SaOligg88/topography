@@ -3,7 +3,7 @@ function[S] = myelin_regional_degree_centrality(mask, dt)
 % dt = 10; % distance threshold for 'regional' aspect in mm.
 % outputs 'S' 
 % example:
-% S = myelin_regional_degree_centrality(10115 10116 10117], 10);
+% S = myelin_regional_degree_centrality([10115 10116 10117], 10);
 
 % load distance matrix	
 dist = load('/scr/litauen1/dist.hcp.lh.mat');
@@ -29,8 +29,8 @@ dim = 32492;
 sess = [1 2];
 pe = ['LR'; 'RL'];
 dir1 = ['/a/documents/connectome/_all/'];
-clear S;
-for i = 1:5%length(subList)
+clear S Z z R r;
+for i = 1:length(subList)
 	count = 1;
 	for s = 1:length(sess);
 		for p = 1:length(pe);
@@ -41,7 +41,7 @@ for i = 1:5%length(subList)
                 num2str(sess(s)) '_' pe(p,:) '_Atlas_hp2000_clean.dtseries.nii'];
 			disp(filename);
             data = ft_read_cifti(filename);
-			data = data.dtseries(1:32492,:); % for Left Hemi
+			data = data.dtseries(1:32492,:); % !!! for Left Hemi !!!
 			
 			for m = 1:length(mask) 
                 input = [data(mask(m),:); data(dist_thresh{mask(m)},:)]';
@@ -51,15 +51,16 @@ for i = 1:5%length(subList)
                 % r to z tranform:
                 z=.5.*log((1+R)./(1-R));
                 % mean across local nodes:
-                Z(count, m) = mean(z);
+                Z(count, m) = mean(z);            
             end
             count = count + 1;
 		end
-	end 
+    end
 	% mean across four runs within individual:
 	S(i, :) = mean(Z,1);
 end
 
+save('S.mat', '-v7.3', 'S');
 h = figure;
 boxplot(S);
 
