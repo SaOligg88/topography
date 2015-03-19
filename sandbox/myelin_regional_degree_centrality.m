@@ -1,22 +1,26 @@
-function[S] = myelin_regional_degree_centrality(mask, dt)
+function[S] = myelin_regional_degree_centrality(mask, dist_thresh_file)
 % Set mask as nodes to run analysis on...
-% dt = 10; % distance threshold for 'regional' aspect in mm.
+% dt = 4; % distance RADIUS threshold for 'regional' aspect in mm.
 % outputs 'S' 
 % example:
-% S = myelin_regional_degree_centrality([10115 10116 10117 ...], 10);
+% S = myelin_regional_degree_centrality([10115 10116 10117 ...], 'dist_thresh_4.mat');
 
 % load distance matrix	
-dist = load('/scr/litauen1/dist.hcp.lh.mat');
-dist = dist.data;
-
-% set mask of area to extract value from.
-%mask = []; % insert values here : mask = [10015 10208];
+% dist = load('/scr/litauen1/dist.hcp.lh.mat');
+% dist = dist.data;
+% dist_thresh = {};
+% for i = 1:length(dist)
+% 	dist_thresh{i} = find(dist(i,:) < dt & dist(i,:) ~= 0);
+% end
 
 % threshold dist
-dist_thresh = {};
-for i = 1:length(mask)
-	dist_thresh{mask(i)} = find(dist(mask(i),:) < dt & dist(mask(i),:) ~= 0);
-end
+% dist_thresh = {};
+% for i = 1:length(mask)
+% 	dist_thresh{mask(i)} = find(dist(mask(i),:) < dt & dist(mask(i),:) ~= 0);
+% end
+
+d = load(dist_thresh_file);
+dist_thresh = d.dist_thresh;
 
 % grab subject list
 List = dir('/a/documents/connectome/_all/');
@@ -30,7 +34,7 @@ sess = [1 2];
 pe = ['LR'; 'RL'];
 dir1 = ['/a/documents/connectome/_all/'];
 clear S Z z R r;
-for i = 1:length(subList)
+for i = 1:5%length(subList)
 	count = 1;
 	for s = 1:length(sess);
 		for p = 1:length(pe);
