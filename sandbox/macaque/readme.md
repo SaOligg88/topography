@@ -23,8 +23,7 @@ Set the following variable in the script before running:
 * comp_max = 20 + 1 		# max number of clusters
 * varname = 'data' 		# variable name saved into .mat file 
 * filename = '/path/to/filename' 	# Filename *without* suffix '.mat'
-
-
+	
 	python clustering_embedding_macaque.py
 
 The output will be a .mat file with the variable `results` called: 
