@@ -5,30 +5,43 @@
 
 #!/usr/bin/python
 
-import sys, getopt, scipy, os, h5py, matplotlib
+import sys, getopt, scipy, os, h5py 
 import numpy as np, pylab as pl
 from sklearn.utils.arpack import eigsh  
 from sklearn.cluster import KMeans
-from mayavi.mlab import *
-import nibabel.gifti.giftiio as gio
-from IPython.core.display import Image as im
+# import matplotlib
+# from mayavi.mlab import *
+# import nibabel.gifti.giftiio as gio
+# from IPython.core.display import Image as im
 
 def main(argv):
+    
+    # Set defaults:
+    n_components_embedding = 25
+    comp_min = 2
+    comp_max = 20
+    
     try:
-        opts, args = getopt.getopt(argv,"hs:f:",["subject=","filename="])
+        opts, args = getopt.getopt(argv,"hi:o:e:c",["subject=","filename="])
     except getopt.GetoptError:
-        print 'embedding.py -s <subject< -f <output filebasename>'
+        print 'embedding.py -i <input matrix> -o <output filebasename>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'embedding.py -s <subject> -f <output filebasename>'
+            print 'embedding.py -i <input matrix> -o <output filebasename>'
             sys.exit()
-        elif opt in ("-f", "--filename"):
+        elif opt in ("-o", "--output"):
             filename = arg
-        elif opt in ("-s", "--subject"):
+        elif opt in ("-i", "--input"):
             sub = arg
+        elif opt in ("-e", "--embedding_components"):
+            n_components_embedding = arg
+        elif opt in ("-c", "--components"):
+            comp_min = arg[0]
+            comp_max = arg[1] + 1
+            
     # Import files
-    f = h5py.File(('/scr/litauen1/%s.hcp.lh.mat' % sub),'r')
+    f = h5py.File(('%s' % sub),'r')
     dataCorr = np.array(f.get('connData'))
     cortex = np.array(f.get('cortex')) - 1
 
@@ -46,16 +59,15 @@ def main(argv):
     del K
     A = np.squeeze(A * [A > 0])
 
-    n_components_embedding=50
     embedding = runEmbed(A, n_components_embedding)
 
-    for n_components in xrange(2,21):   
+    for n_components in xrange(comp_min,comp_max):   
         if n_components == 2:
             results = recort(np.squeeze(kmeans(embedding, n_components)), np.squeeze(np.sort(cort)))
         else:
             results = np.vstack((results, recort(np.squeeze(kmeans(embedding, n_components)), np.squeeze(np.sort(cort)))))
     
-    scipy.io.savemat(('/scr/litauen1/%s.mat' % filename), {'results':results})
+    scipy.io.savemat(('%s.mat' % filename), {'results':results})
 
 def runEmbed(data, n_components):
     lambdas, vectors = eigsh(data, k=n_components)   
@@ -75,7 +87,7 @@ def kmeans(embedding, n_components):
     return data
     
 def recort(data, cortex):
-    d = ([0] * 32492) 
+    d = ([0] * np.shape(data)) 
     count = 0
     for i in cortex:
         d[i] = data[count] + 1
