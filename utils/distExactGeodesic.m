@@ -1,10 +1,10 @@
 function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, sub)
 % source = source node ids
-% surfType = '32' or '164'
+% surfType = '32' or '164' or 'freesurfer'
 % hemi = 'L' or 'R'
 % analysisType = 'distance' 'zones' 'all'
 
-addpath('/scr/litauen1/Dropbox/misc/yeoTopo/lme/geodesic/')
+%addpath('/scr/litauen1/Dropbox/misc/yeoTopo/lme/geodesic/')
 
 if surfType == '32'
 %	surf = gifti(['/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.' ...
@@ -12,8 +12,14 @@ if surfType == '32'
 %	sub = num2str(100307);
 %	aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub ...
 %		'.' hemi '.aparc.a2009s.32k_fs_LR.label.gii']);
-	surf = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii')
-	aparc = gifti('data/lh.aparc.gii')
+    if hemi == 'L'
+        surf = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii')
+        aparc = gifti('data/lh.aparc.gii')
+    end
+    if hemi =='R'
+        surf = gifti('data/Q1-Q6_R440.R.midthickness.32k_fs_LR.surf.gii')
+        aparc = gifti('data/rh.aparc.gii')
+    end
 	aparc = aparc.cdata;
 	noncortex = find(aparc == 0);
 
@@ -34,6 +40,20 @@ elseif surfType == '164'
 		'.L.aparc.a2009s.164k_fs_LR.label.gii']);
 	aparc = aparc.cdata;
 	noncortex = find(aparc == 0);
+	
+elseif surfType == 'freesurfer'
+	filename = sub;
+	surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
+	surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
+	% find midpoint
+	surf.coord = (surfp.coord + surfw.coord) ./ 2;
+	surf.faces = surf.tri;
+	surf.vertices = surf.coord';
+	
+	% load aparc
+	%aparc = SurfStatReadAnnotate([sub '/labels/' hemi '.aparc']);
+	
+	%noncortex = find(aparc == ???);
 end
 
 index1 = ismember(surf.faces(:,1),noncortex);

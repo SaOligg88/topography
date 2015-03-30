@@ -21,19 +21,20 @@ labs = unique(rsn7);
 for i = 1:length(labs)
     rsn7(find(rsn7 == labs(i))) = i-1;
 end
-
+surf_gii = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii');
+surfL.coord = surf_gii.vertices'; surfL.tri = surf_gii.faces;
+surf_gii = gifti('data/Q1-Q6_R440.R.midthickness.32k_fs_LR.surf.gii');
+surfR.coord = surf_gii.vertices'; surfR.tri = surf_gii.faces;
 [clusL7] = pathsFindHCP(rsn7(1:32492),3,'L', surfL);
-[clusR7] = pathsFindHCP(rsn7(32493:32492*2),3,'R', surfL);
+[clusR7] = pathsFindHCP(rsn7(32493:32492*2),3,'R', surfR);
 
 rsn17 = rsn(:,2);
 labs = unique(rsn17);
 for i = 1:length(labs)
     rsn17(find(rsn17 == labs(i))) = i-1;
 end
-[surfL, surfiL, surfmL] = loadHCPsurf_group('L')
-[clusL17] = pathsFindHCP(rsn17(1:32492),3,'L', surfmL);
-[surfR, surfiR, surfmR] = loadHCPsurf_group('R')
-[clusR17] = pathsFindHCP(rsn17(32493:32492*2),3,'R', surfmR);
+[clusL17] = pathsFindHCP(rsn17(1:32492),3,'L');
+[clusR17] = pathsFindHCP(rsn17(32493:32492*2),3,'R');
 
 % hippocampal DMN node:
 DMNpeaksL = [clusL17.peaks(find(clusL17.edgeNet == 2)) clusL7.peaks(28)];
