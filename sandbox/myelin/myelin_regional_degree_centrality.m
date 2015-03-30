@@ -39,8 +39,10 @@ sess = [1 2];
 pe = ['LR'; 'RL'];
 dir1 = ['/a/documents/connectome/_all/'];
 clear S Z z R r;
+csub = 1;
 for i = 1:length(subList)
 	count = 1;
+    cfile = 0;
 	for s = 1:length(sess);
 		for p = 1:length(pe);
             % read in data:
@@ -48,26 +50,41 @@ for i = 1:length(subList)
                 '/MNINonLinear/Results/rfMRI_REST' ...
                 num2str(sess(s)) '_' pe(p,:) '/rfMRI_REST' ...
                 num2str(sess(s)) '_' pe(p,:) '_Atlas_hp2000_clean.dtseries.nii'];
-			disp(filename);
-            data = ft_read_cifti(filename);
-			data = data.dtseries(1:32492,:); % !!! for Left Hemi !!!
-			
-			for m = 1:length(mask) 
-                input = [data(mask(m),:); data(dist_thresh{mask(m)},:)]';
-				r = corr(input);
-                % take only r-values from surrounds nodes:
-				R=r(1,find(r(1,:) ~= 1));
-                % r to z tranform:
-                z=.5.*log((1+R)./(1-R));
-                % mean across local nodes:
-                Z(count, m) = mean(z);            
+            if exist(filename, 'file')
+                cfile = cfile + 1;
             end
-            count = count + 1;
-		end
+        end
     end
-	% mean across four runs within individual:
-    % Rows are individuals, Columns are nodes from the mask.
-	S(i, :) = mean(Z,1);
+    if cfile == 4
+        for s = 1:length(sess);
+        	for p = 1:length(pe);
+                % read in data:
+                filename = [dir1 num2str(subList(i,:)) ...
+                    '/MNINonLinear/Results/rfMRI_REST' ...
+                    num2str(sess(s)) '_' pe(p,:) '/rfMRI_REST' ...
+                    num2str(sess(s)) '_' pe(p,:) '_Atlas_hp2000_clean.dtseries.nii'];
+                disp(filename);
+                data = ft_read_cifti(filename);
+                data = data.dtseries(1:32492,:); % !!! for Left Hemi !!!
+
+                for m = 1:length(mask) 
+                    input = [data(mask(m),:); data(dist_thresh{mask(m)},:)]';
+                    r = corr(input);
+                    % take only r-values from surrounds nodes:
+                    R=r(1,find(r(1,:) ~= 1));
+                    % r to z tranform:
+                    z=.5.*log((1+R)./(1-R));
+                    % mean across local nodes:
+                    Z(count, m) = mean(z);            
+                end
+                count = count + 1;
+            end
+        end
+        % mean across four runs within individual:
+        % Rows are individuals, Columns are nodes from the mask.
+        S(csub, :) = mean(Z,1);
+        csub = csub + 1;
+    end
 end
 
 save('S.mat', '-v7.3', 'S');
