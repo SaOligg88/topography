@@ -6,6 +6,7 @@ thresh = 2;
 hemi   = ['lh']; 	% ['lh','rh']
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
+dist2mask = struct();
 
 for s = 1:length(subjects)
     subject = num2str(subjects(s));
@@ -57,6 +58,9 @@ for s = 1:length(subjects)
                 c = c+1; 
             end
         end
+        dist2mask.clusDMN(s,h) = clusDMN;
+        dist2mask.clusDMNpar(s,h) = clusDMNpar;
+        dist2mask.clusterNum(s,h,:) = clust(c);
         % Transform region from fsaverage space to individual space
             % Where freesurfer grabs the data, does it do so from reg space of individual?
         surf_sphere = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi(h) '.sphere']); 
@@ -66,12 +70,15 @@ for s = 1:length(subjects)
 
         % Get distances from DMN:
         [distanceMap, ~] = distExactGeodesic(source, 'freesurfer', hemi, 'distance', [dir1 subject]);
-
+        dist2mask.distanceMap(s,h,:) = distanceMap;
         % Get min dist value to masks from primary (using aparc)
         mask = []; % label values from aparc, OR from other end of clust path?
         for i = 1:length(mask)
             % min or mean or median?   
-            dist2mask(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
+            dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
         end
+        dist2mask.hemi(h) = hemi(h);
     end
+    dist2mask.subjects(s) = str2double(subject);
 end
+

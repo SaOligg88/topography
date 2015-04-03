@@ -8,7 +8,7 @@ Modify the variables at the top, including adding the subject list (comma separa
 
 In Matlab, run: 
 
-	DoFindPaths_LSD(subject)
+	dist2mask = DoFindPaths_LSD(subjects);
 
 Be sure to clone the entire repository, as the necessary functions are located in `../../utils`
 
