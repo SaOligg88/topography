@@ -14,8 +14,9 @@ for s = 1:length(subjects)
         % load standard fsaverage5
         surf = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.inflated']); 
         % Load cluster results: (output from individual_distance_cluster.py)
+        % Check!!!:
         results = load([dir1 'clusters_' subject '_' hemi{h} '_em25_2_20.mat']);
-        [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi '.aparc.a2009s.annot']);
+        [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi{h} '.aparc.a2009s.annot']);
 
         %%%%%%%%% Begin %%%%%%%%%
         % Decide on which number cluster solution:
@@ -57,11 +58,11 @@ for s = 1:length(subjects)
             
             if ~isempty(clusDMNpar)
                 clusFound = 1;
-            elseif length(clusDMNpar > 1)
+            elseif length(clusDMNpar) > 1
                 % adjudicate between conflicting clusters by taking
                 % furthest posterior
                 for i = 1:length(clusDMNpar)
-                    realDMN(i) = mean(surf.coord(2,find(clus.label == clusDMNpar)));
+                    realDMN(i) = mean(surf.coord(2,clus.label == clusDMNpar));
                 end               
                 [~,indRealDMN] = min(realDMN);
                 clusDMNpar = clusDMNpar(indRealDMN);

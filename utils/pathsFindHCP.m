@@ -72,8 +72,8 @@ for i = 1:length(lab)-1
 end
 
 % Write out csv file for reading into gephi
-filename = ['./results/results.' num2str(length(lab)) '.csv'];
-csvwrite(filename,[clus.score [1:length(clus.score)]'])
+%filename = ['./results/results.' num2str(length(lab)) '.csv'];
+%csvwrite(filename,[clus.score [1:length(clus.score)]'])
 
 % find peak nodes for each cluster
 for i = 1:max(clus.label)   
