@@ -4,7 +4,7 @@ Modify the variables at the top, including adding the subject list (comma separa
 
 	python individual_distance_cluster.py
 
-# Step 2: Find DMN cluster #
+# Step 2: Find DMN cluster and calculate distance to sensory regions #
 
 In Matlab, run: 
 
