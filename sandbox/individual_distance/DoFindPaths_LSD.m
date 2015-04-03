@@ -2,7 +2,7 @@ function[dist2mask] = DoFindPaths_LSD(subjects)
 
 % set variables:
 addpath(genpath('../../utils'));
-thresh = 2;		
+thresh = 2; % remove clusters smallest than this number of nodes
 hemi   = {'lh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
@@ -23,16 +23,16 @@ for s = 1:length(subjects)
         % Decide on which number cluster solution:
         clusFound = 0;
         % order to check clust number:
-        clust = [15 16 17 18 19 14 13 12 11 10 9 8 7 6 5 4 3 2 1];
+        clust = [15 16 17 18 19 14 13 12 11 10 9 8 7 6 5 4 3 2 1];      
         c = 1;
         while clusFound == 0
             disp(['trying ' num2str(clust(c)+1) ' cluster solution']);
             label = results.results(clust(c),:);
             clus = pathsFindHCP(label, thresh, hemi, surf);
             graph = edgeL2adj(clus.score) + edgeL2adj(clus.score)';
-            thresh = [0:0.001:1];
-            for i = 1:length(thresh)
-                graphThreshed = (graph > thresh(i)) .* graph;
+            thr = [0:0.001:1];
+            for i = 1:length(thr)
+                graphThreshed = (graph > thr(i)) .* graph;
                 S = isconnected(graphThreshed);
                 if S == 0                
                     break; exact
@@ -58,7 +58,7 @@ for s = 1:length(subjects)
             clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table(dmnMasks,end))' ...
                 .* (clus.label .* (clus.network == clusDMN))));
             
-            if isempty(clusDMNpar)
+            if clusDMNpar == 1
                 clusFound = 1;
             elseif length(clusDMNpar) > 1
                 % adjudicate between conflicting clusters by taking
@@ -68,8 +68,11 @@ for s = 1:length(subjects)
                 end               
                 [~,indRealDMN] = min(realDMN);
                 clusDMNpar = clusDMNpar(indRealDMN);
-                c = c+1; 
+                if clusDMNpar == 1
+                    clusFound = 1;         
+                end
             end
+            c = c+1; 
         end
         dist2mask.clusDMN(s,h) = clusDMN;
         dist2mask.clusDMNpar(s,h) = clusDMNpar;
@@ -92,7 +95,7 @@ for s = 1:length(subjects)
                 ];             
         for i = 1:length(mask)
             % min or mean or median?   
-            dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
+            dist2mask.dist(s,h,i) = mean(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
             dist2mask.distlabels{s,h,i} = colortable.struct_names{mask(i)};
         end       
         dist2mask.hemi{h} = hemi{h};
