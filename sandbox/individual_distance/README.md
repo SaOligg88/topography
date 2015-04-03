@@ -1,10 +1,14 @@
 # Step 1: Clustering #
 
-	`individual_distance_cluster.py`
+Modify the variables at the top, including adding the subject list (comma separated), then run:
+
+	`python individual_distance_cluster.py`
 
 # Step 2: Find DMN cluster #
 
-	``
+In Matlab, run: 
 
-# Step 3: Get distance values #
+	`DoFindPaths_LSD(subject)`
+
+Be sure to clone the entire repository, as the necessary functions are located in `../../utils`
 
