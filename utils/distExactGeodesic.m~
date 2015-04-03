@@ -6,8 +6,7 @@ function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, 
 
 %addpath('/scr/litauen1/Dropbox/misc/yeoTopo/lme/geodesic/')
 
-switch surfType
-    case '32'
+if surfType == '32'
 %	surf = gifti(['/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.' ...
 %		hemi '.midthickness.32k_fs_LR.surf.gii']);
 %	sub = num2str(100307);
@@ -30,7 +29,7 @@ switch surfType
     		27785; 27786; 27793; 27799; 27804; 27809; 27805; 27799; 27800; 27806; 27810; 27810 ]);
 	end
 	
-    case '164'
+elseif surfType == '164'
 	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.midthickness.164k_fs_LR.surf.gii'];
 	surf = gifti(filename);
 	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.very_inflated.164k_fs_LR.surf.gii'];
@@ -42,17 +41,21 @@ switch surfType
 	aparc = aparc.cdata;
 	noncortex = find(aparc == 0);
 	
-    case 'freesurfer'
+elseif surfType == 'freesurfer'
 	filename = sub;
 	surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
 	surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
 	% find midpoint
 	surf.coord = (surfp.coord + surfw.coord) ./ 2;
-	surf.faces = surfp.tri;
+	surf.faces = surf.tri;
 	surf.vertices = surf.coord';
-	c = read_label(sub,[hemi '.cortex']);
+	
+	% load aparc
+	%aparc = SurfStatReadAnnotate([sub '/labels/' hemi '.aparc']);
+	c = read_label('/scr/ilz2/LEMON_LSD/freesurfer/fsaverage5','lh.cortex');
     cortex = c(:,1) + 1; clear c;
-	noncortex = setdiff(1:length(surf.vertices),cortex);
+	noncortex = se(aparc == ???);
+    
 end
 
 index1 = ismember(surf.faces(:,1),noncortex);

@@ -6,6 +6,7 @@ thresh = 2;
 hemi   = {'lh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
+dir2   = '/scr/liberia1/';
 dist2mask = struct();
 
 for s = 1:length(subjects)
@@ -15,8 +16,8 @@ for s = 1:length(subjects)
         surf = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.inflated']); 
         % Load cluster results: (output from individual_distance_cluster.py)
         % Check!!!:
-        results = load([dir1 'clusters_' subject '_' hemi{h} '_em25_2_20.mat']);
-        [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi{h} '.aparc.a2009s.annot']);
+        results = load([dir2 'clusters_' subject '_' hemi{h} '_em25_2_20.mat']);
+        [~, labelannot, colortable] = read_annotation([dir1 'fsaverage5/label/' hemi{h} '.aparc.a2009s.annot']);
 
         %%%%%%%%% Begin %%%%%%%%%
         % Decide on which number cluster solution:
@@ -25,7 +26,7 @@ for s = 1:length(subjects)
         clust = [15 16 17 18 19 14 13 12 11 10 9 8 7 6 5 4 3 2 1];
         c = 1;
         while clusFound == 0
-            disp(['trying ' num2str(clust(c)+1) ' cluster solution');
+            disp(['trying ' num2str(clust(c)+1) ' cluster solution']);
             label = results.results(clust(c),:);
             clus = pathsFindHCP(label, thresh, hemi, surf);
             graph = edgeL2adj(clus.score) + edgeL2adj(clus.score)';
@@ -50,19 +51,20 @@ for s = 1:length(subjects)
             end
 
             % Get cluster of interest in parietal                   
-            dmnMasks = [27 ... G_pariet_inf-Supramar
-                        57 ... S_interm_prim-Jensen
-                        75 ... S_temporal_sup
+            dmnMasks = [27 ... % G_pariet_inf-Supramar
+                        57 ... % S_interm_prim-Jensen
+                        75 ... % S_temporal_sup
                         ];
-            clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table([dmnMasks],end)) .* clus.label .* find(clus.network == clusDMN)));
+            clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table(dmnMasks,end))' ...
+                .* (clus.label .* (clus.network == clusDMN))));
             
-            if ~isempty(clusDMNpar)
+            if isempty(clusDMNpar)
                 clusFound = 1;
             elseif length(clusDMNpar) > 1
                 % adjudicate between conflicting clusters by taking
                 % furthest posterior
                 for i = 1:length(clusDMNpar)
-                    realDMN(i) = mean(surf.coord(2,clus.label == clusDMNpar));
+                    realDMN(i) = mean(surf.coord(2,clus.label == clusDMNpar(i)));
                 end               
                 [~,indRealDMN] = min(realDMN);
                 clusDMNpar = clusDMNpar(indRealDMN);
@@ -75,22 +77,24 @@ for s = 1:length(subjects)
         % Transform region from fsaverage space to individual space
             % Where freesurfer grabs the data, does it do so from reg space of individual?
         surf_sphere = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.sphere']); 
-        surf_sphere_ind = SurfStatReadSurf([dir subject '/surf/' hemi '.sphere.reg']);
+        surf_sphere_ind = SurfStatReadSurf([dir1 subject '/surf/' hemi{h} '.sphere.reg']);
         coords = SurfStatInd2Coord(find(clus.label == clusDMNpar), surf_sphere);
-        source = unique(SurfStatCoord2Ind(coords, surf_sphere_ind));
+        source = unique(SurfStatCoord2Ind(coords', surf_sphere_ind));
 
         % Get distances from DMN:
-        [distanceMap, ~] = distExactGeodesic(source, 'freesurfer', hemi, 'distance', [dir1 subject]);
+        [distanceMap, ~] = distExactGeodesic(source, 'freesurfer', hemi{h}, 'distance', [dir1 subject]);
         dist2mask.distanceMap(s,h,:) = distanceMap;
         % Get min dist value to masks from primary (using aparc)
         % OR from other end of clust path?
-        mask = [45 ... % S_calcarine
+        [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi{h} '.aparc.a2009s.annot']);
+        mask = [46 ... % S_calcarine
                 76 ... % S_temporal_transverse
                 ];             
         for i = 1:length(mask)
             % min or mean or median?   
             dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
-        end
+            dist2mask.distlabels{s,h,i} = colortable.struct_names{mask(i)};
+        end       
         dist2mask.hemi{h} = hemi{h};
     end
     dist2mask.subjects(s) = str2double(subject);
