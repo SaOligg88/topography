@@ -49,11 +49,9 @@ elseif surfType == 'freesurfer'
 	surf.coord = (surfp.coord + surfw.coord) ./ 2;
 	surf.faces = surf.tri;
 	surf.vertices = surf.coord';
-	
-	% load aparc
-	%aparc = SurfStatReadAnnotate([sub '/labels/' hemi '.aparc']);
-	
-	%noncortex = find(aparc == ???);
+	c = read_label(sub,[hemi '.cortex']);
+    cortex = c(:,1) + 1; clear c;
+	noncortex = setdiff(1:length(surf.vertices),cortex);
 end
 
 index1 = ismember(surf.faces(:,1),noncortex);
