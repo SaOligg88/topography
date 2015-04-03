@@ -1,9 +1,18 @@
 function[dist2mask] = DoFindPaths_LSD(subjects)
+% the output of dist2mask is  
+% .clusDMN:     identifier of network identifier used
+% .clusDMNpar:  identifier of DMN region used
+% .clusterNum:  cluster number used 
+% .distanceMap: full distance map
+% .dist:        specific min distances to masked regions
+% .distlabels:  names of masked regions
+% .hemi:        corresponding hemisphere to dist
+% .subjects:    subject id
 
 % set variables:
 addpath(genpath('../../utils'));
 thresh = 2; % remove clusters smallest than this number of nodes
-hemi   = {'lh'}; 	% {'lh','rh'}
+hemi   = {'rh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
 dir2   = '/scr/liberia1/';
@@ -95,13 +104,13 @@ for s = 1:length(subjects)
                 ];             
         for i = 1:length(mask)
             % min or mean or median?   
-            dist2mask.dist(s,h,i) = mean(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
+            dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
             dist2mask.distlabels{s,h,i} = colortable.struct_names{mask(i)};
         end       
         dist2mask.hemi{h} = hemi{h};
     end
     dist2mask.subjects(s) = str2double(subject);
 end
-
+save('dist2mask.mat','-v7.3','dist2mask');
 
        
