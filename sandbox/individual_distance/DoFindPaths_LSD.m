@@ -3,7 +3,7 @@ function[dist2mask] = DoFindPaths_LSD(subjects)
 % set variables:
 addpath(genpath('../../utils'));
 thresh = 2;		
-hemi   = ['lh']; 	% ['lh','rh']
+hemi   = {'lh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
 dist2mask = struct();
@@ -12,9 +12,9 @@ for s = 1:length(subjects)
     subject = num2str(subjects(s));
     for h = 1:length(hemi)
         % load standard fsaverage5
-        surf = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi(h) '.inflated']); 
+        surf = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.inflated']); 
         % Load cluster results: (output from individual_distance_cluster.py)
-        results = load([dir1 'cluster_' subject '_' hemi(h) '_em25_2_20.mat']);
+        results = load([dir1 'clusters_' subject '_' hemi{h} '_em25_2_20.mat']);
         [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi '.aparc.a2009s.annot']);
 
         %%%%%%%%% Begin %%%%%%%%%
@@ -48,13 +48,23 @@ for s = 1:length(subjects)
                 clusDMN = ind(1);
             end
 
-            % Get cluster of interest in parietal         
-            % 26 and 27 denote parietal % CHECK!!!
-            clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table([26 27],end)) .* clus.label .* find(clus.network == clusDMN)));
-
+            % Get cluster of interest in parietal                   
+            dmnMasks = [27 ... G_pariet_inf-Supramar
+                        57 ... S_interm_prim-Jensen
+                        75 ... S_temporal_sup
+                        ];
+            clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table([dmnMasks],end)) .* clus.label .* find(clus.network == clusDMN)));
+            
             if ~isempty(clusDMNpar)
                 clusFound = 1;
-            else
+            elseif length(clusDMNpar > 1)
+                % adjudicate between conflicting clusters by taking
+                % furthest posterior
+                for i = 1:length(clusDMNpar)
+                    realDMN(i) = mean(surf.coord(2,find(clus.label == clusDMNpar)));
+                end               
+                [~,indRealDMN] = min(realDMN);
+                clusDMNpar = clusDMNpar(indRealDMN);
                 c = c+1; 
             end
         end
@@ -63,7 +73,7 @@ for s = 1:length(subjects)
         dist2mask.clusterNum(s,h,:) = clust(c);
         % Transform region from fsaverage space to individual space
             % Where freesurfer grabs the data, does it do so from reg space of individual?
-        surf_sphere = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi(h) '.sphere']); 
+        surf_sphere = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.sphere']); 
         surf_sphere_ind = SurfStatReadSurf([dir subject '/surf/' hemi '.sphere.reg']);
         coords = SurfStatInd2Coord(find(clus.label == clusDMNpar), surf_sphere);
         source = unique(SurfStatCoord2Ind(coords, surf_sphere_ind));
@@ -72,13 +82,18 @@ for s = 1:length(subjects)
         [distanceMap, ~] = distExactGeodesic(source, 'freesurfer', hemi, 'distance', [dir1 subject]);
         dist2mask.distanceMap(s,h,:) = distanceMap;
         % Get min dist value to masks from primary (using aparc)
-        mask = []; % label values from aparc, OR from other end of clust path?
+        % OR from other end of clust path?
+        mask = [45 ... % S_calcarine
+                76 ... % S_temporal_transverse
+                ];             
         for i = 1:length(mask)
             % min or mean or median?   
             dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
         end
-        dist2mask.hemi(h) = hemi(h);
+        dist2mask.hemi{h} = hemi{h};
     end
     dist2mask.subjects(s) = str2double(subject);
 end
 
+
+       
