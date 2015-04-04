@@ -12,7 +12,7 @@ function[dist2mask] = DoFindPaths_LSD(subjects)
 % set variables:
 addpath(genpath('../../utils'));
 thresh = 2; % remove clusters smallest than this number of nodes
-hemi   = {'rh'}; 	% {'lh','rh'}
+hemi   = {'lh','rh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
 dir2   = '/scr/liberia1/';
@@ -32,7 +32,7 @@ for s = 1:length(subjects)
         % Decide on which number cluster solution:
         clusFound = 0;
         % order to check clust number:
-        clust = [15 16 17 18 19 14 13 12 11 10 9 8 7 6 5 4 3 2 1];      
+        clust = [10 11 12 13 14 15 16 17 18 19  9 8 7 6 5 4 3 2 1];      
         c = 1;
         while clusFound == 0
             disp(['trying ' num2str(clust(c)+1) ' cluster solution']);
@@ -60,24 +60,24 @@ for s = 1:length(subjects)
             end
 
             % Get cluster of interest in parietal                   
-            dmnMasks = [27 ... % G_pariet_inf-Supramar
-                        57 ... % S_interm_prim-Jensen
-                        75 ... % S_temporal_sup
+            dmnMasks = [75 ... % S_temporal_sup 57 ... % S_interm_prim-Jensen                         
+                        27 ... % G_pariet_inf-Supramar                       
                         ];
             clusDMNpar = unique(nonzeros(ismember(labelannot, colortable.table(dmnMasks,end))' ...
                 .* (clus.label .* (clus.network == clusDMN))));
             
-            if clusDMNpar == 1
+            if length(clusDMNpar) == 1
                 clusFound = 1;
             elseif length(clusDMNpar) > 1
                 % adjudicate between conflicting clusters by taking
-                % furthest posterior
+                % furthest dorsal
+                realDMN = [];
                 for i = 1:length(clusDMNpar)
-                    realDMN(i) = mean(surf.coord(2,clus.label == clusDMNpar(i)));
+                    realDMN(i) = mean(surf.coord(3,clus.label == clusDMNpar(i)));
                 end               
-                [~,indRealDMN] = min(realDMN);
+                [~,indRealDMN] = max(realDMN);
                 clusDMNpar = clusDMNpar(indRealDMN);
-                if clusDMNpar == 1
+                if length(clusDMNpar) == 1
                     clusFound = 1;         
                 end
             end
@@ -86,6 +86,9 @@ for s = 1:length(subjects)
         dist2mask.clusDMN(s,h) = clusDMN;
         dist2mask.clusDMNpar(s,h) = clusDMNpar;
         dist2mask.clusterNum(s,h,:) = clust(c);
+        dist2mask.labelNetwork(s,h,:) = clus.network;
+        dist2mask.labelClus(s,h,:) = clus.label;
+        
         % Transform region from fsaverage space to individual space
             % Where freesurfer grabs the data, does it do so from reg space of individual?
         surf_sphere = SurfStatReadSurf([dir1 'fsaverage5/surf/' hemi{h} '.sphere']); 
@@ -95,7 +98,7 @@ for s = 1:length(subjects)
 
         % Get distances from DMN:
         [distanceMap, ~] = distExactGeodesic(source, 'freesurfer', hemi{h}, 'distance', [dir1 subject]);
-        dist2mask.distanceMap(s,h,:) = distanceMap;
+        dist2mask.distanceMap{s,h,:} = distanceMap;
         % Get min dist value to masks from primary (using aparc)
         % OR from other end of clust path?
         [~, labelannot, colortable] = read_annotation([dir1 subject '/label/' hemi{h} '.aparc.a2009s.annot']);
@@ -107,7 +110,7 @@ for s = 1:length(subjects)
             dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
             dist2mask.distlabels{s,h,i} = colortable.struct_names{mask(i)};
         end       
-        dist2mask.hemi{h} = hemi{h};
+        dist2mask.hemi{h} = hemi{h};        
     end
     dist2mask.subjects(s) = str2double(subject);
 end

@@ -3,6 +3,8 @@ function[clus] = DoFindPaths()
 % set to 0 to not run any purmutations
 
 addpath(genpath('./utils'));
+addpath(genpath('./config'));
+
 %% Load yeo preconfigured:
 [thresh, surf, surfi, surfm, label, edg, lab] = config_yeo_L_17rsns();
 
@@ -13,14 +15,15 @@ thresh = 2;
 hemi = 'L';
 
 clus = pathsFindHCP(label, thresh, hemi, surf);
-% save('data/clus.mat', '-v7.3', 'clus');
+save('data/clus.mat', '-v7.3', 'clus');
 
 %% Plot outputs of clus:
 numClus = length(unique(nonzeros(clus.regions)));
 [matrix, s, ind, x, y] = threshGraph(clus, surf, ['results/label' num2str(numClus)]);
 
 %% Save: 
-colors = [0 0 0; cbrewer('qual','Set1',numClus)];
+%colors = [0 0 0; cbrewer('qual','Set1',numClus)];
+colors = [0 0 0; csvread('results/colormaps/region_colors.csv')];
 WriteSurfMap(clus.regions, ['results/label' num2str(numClus)], colors, surfm);
 
 %% clustering
