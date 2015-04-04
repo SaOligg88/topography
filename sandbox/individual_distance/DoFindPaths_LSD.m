@@ -1,5 +1,8 @@
-function[dist2mask] = DoFindPaths_LSD(subjects)
-% the output of dist2mask is  
+function [dist2mask] = DoFindPaths_LSD(subjects, varargin)
+
+% The inputs are:
+% subject:      can be single subject 123456, or [123456, 124325, 23423452]
+% The output of dist2mask is  
 % .clusDMN:     identifier of network identifier used
 % .clusDMNpar:  identifier of DMN region used
 % .clusterNum:  cluster number used 
@@ -11,13 +14,25 @@ function[dist2mask] = DoFindPaths_LSD(subjects)
 
 % set variables:
 addpath(genpath('../../utils'));
-thresh = 2; % remove clusters smallest than this number of nodes
-hemi   = {'lh','rh'}; 	% {'lh','rh'}
+
+p = inputParser;
+defaultThresh = 2; % remove clusters smallest than this number of nodes
+defaultHemi   = {'lh','rh'}; 	% {'lh','rh'}
 % locations of freesurfer directory containing subjects:
 dir1   = '/scr/ilz2/LEMON_LSD/freesurfer/';
 dir2   = '/scr/liberia1/';
-dist2mask = struct();
+defaultFigures = false; % can be changed on the commandline with ...,'figures',true)
 
+addRequired(p,'subects',@isnumeric);
+addParameter(p,'thresh',defaultThresh,@isnumeric);
+addParameter(p,'figures', defaultFigures);
+addParameter(p,'hemi', defaultHemi);
+
+parse(p,subjects,varargin{:}); 
+thresh = p.Results.thresh;
+hemi = p.Results.hemi;
+
+dist2mask = struct();
 for s = 1:length(subjects)
     subject = num2str(subjects(s));
     for h = 1:length(hemi)
@@ -32,7 +47,7 @@ for s = 1:length(subjects)
         % Decide on which number cluster solution:
         clusFound = 0;
         % order to check clust number:
-        clust = [10 11 12 13 14 15 16 17 18 19  9 8 7 6 5 4 3 2 1];      
+        clust = [size(results.results,1):-1:1];%[10 11 12 13 14 15 16 17 18 19  9 8 7 6 5 4 3 2 1];      
         c = 1;
         while clusFound == 0
             disp(['trying ' num2str(clust(c)+1) ' cluster solution']);
@@ -107,13 +122,26 @@ for s = 1:length(subjects)
                 ];             
         for i = 1:length(mask)
             % min or mean or median?   
-            dist2mask.dist(s,h,i) = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
+            dist2mask.dist{s,h,i} = min(distanceMap(ismember(labelannot, colortable.table(mask(i),end))));
             dist2mask.distlabels{s,h,i} = colortable.struct_names{mask(i)};
         end       
         dist2mask.hemi{h} = hemi{h};        
-    end
+    
+    end    
     dist2mask.subjects(s) = str2double(subject);
+    
+    if true(p.Results.figures)
+        surf_ind = SurfStatReadSurf({[dir1 subject '/surf/lh.inflated'], [dir1 subject '/surf/rh.inflated']});
+        % look at results: 
+        
+        h = figure; SurfStatView([dist2mask.distanceMap{s,1,:}; dist2mask.distanceMap{s,2,:}], surf_ind);
+        saveas(h, [subject '.distanceMap.DMN.parietal.png']);
+        clf
+        surf = SurfStatReadSurf({[dir1 'fsaverage5/surf/lh.inflated'], [dir1 'fsaverage5/surf/rh.inflated']}); 
+        title = ['left: ' num2str(dist2mask.clusDMN(s,1)) ' right: ' num2str(dist2mask.clusDMN(s,2))];
+        SurfStatView([squeeze(dist2mask.labelNetwork(s,1,:)); squeeze(dist2mask.labelNetwork(s,2,:))], surf, title);
+        saveas(h, [subject '.clusters.png']);        
+    end
 end
 save('dist2mask.mat','-v7.3','dist2mask');
-
-       
+%close all
