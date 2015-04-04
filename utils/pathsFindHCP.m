@@ -1,4 +1,4 @@
-function[clus] = findPathsHCP(label, thresh, hemi, surf)
+function[clus] = pathsFindHCP(label, thresh, hemi, surf)
 % 'label' is a vector of the length of the surface with integers denoting
 % groups. 
 % 'thresh' is equal to the minimum number of adjacent nodes that can

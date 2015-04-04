@@ -28,9 +28,10 @@ plot_graph = 1  # Plot whole graph
 plot_subgraphs = 0  # Plot each individual colored subgraph
 
 # Paths
-in_dir = '../../data/'#'../../results/'  # 'input/input_BrainCOLOR'
-out_dir = '../../results/colormaps/'  # 'output/output_BrainCOLOR'
+in_dir = '../data/' #'../../results/'  # 'input/input_BrainCOLOR'
+out_dir = '../results/colormaps/'
 out_images = out_dir
+vers = '3'
 
 # Region adjacency table
 in_table = in_dir + 'clus.mat' #'region_adjacency_matrix.xls'
@@ -102,7 +103,7 @@ if plot_graph:
     nx.draw_networkx_labels(G, pos, labels, font_size=graph_font_size, font_color='black')
     plt.axis('off')
 
-out_colors = out_dir + 'region_colors_' + str(Ntotal) + '_2.csv'
+out_colors = out_dir + 'region_colors_' + str(Ntotal) + '_' + vers + '.csv'
 f = open(out_colors,'w')
 N = Ntotal #len(glist)        
 g = G #G.subgraph(glist)
@@ -118,9 +119,6 @@ else:
 hues = np.arange(init_angle, init_angle + nangles_g*color_angle, color_angle)
 if repeat_hues:
     hues = np.hstack((hues * np.ones((nLumas,1))).transpose())
-
-print np.shape(hues)
-print np.shape(Lumas)
 init_angle += nangles_g*color_angle
 
 # Compute the differences between every pair of colors in the colormap
@@ -178,6 +176,6 @@ if plot_graph_color:
         nx.draw_networkx_nodes(g,pos,node_size=graph_node_size,nodelist=[g.node.keys()[iN]],node_color=coloring)
         f.write(str(coloring[0]) + ', ' + str(coloring[1]) + ', ' + str(coloring[2]) + '\n')  
                     
-plt.savefig(out_images + "graph_2.png")
+plt.savefig(out_images + "graph_" + vers + ".png")
 f.close()
     
