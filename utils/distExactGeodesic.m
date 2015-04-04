@@ -8,51 +8,46 @@ function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, 
 
 switch surfType
     case '32'
-%	surf = gifti(['/scr/murg2/HCP_new/HCP_Q1-Q6_GroupAvg_Related440_Unrelated100_v1/Q1-Q6_R440.' ...
-%		hemi '.midthickness.32k_fs_LR.surf.gii']);
-%	sub = num2str(100307);
-%	aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub ...
-%		'.' hemi '.aparc.a2009s.32k_fs_LR.label.gii']);
-    if hemi == 'L'
-        surf = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii')
-        aparc = gifti('data/lh.aparc.gii')
-    end
-    if hemi =='R'
-        surf = gifti('data/Q1-Q6_R440.R.midthickness.32k_fs_LR.surf.gii')
-        aparc = gifti('data/rh.aparc.gii')
-    end
-	aparc = aparc.cdata;
-	noncortex = find(aparc == 0);
+        if hemi == 'L'
+            surf = gifti('data/Q1-Q6_R440.L.midthickness.32k_fs_LR.surf.gii');
+            aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub '.L.aparc.a2009s.32k_fs_LR.label.gii']);
+        end
+        if hemi =='R'
+            surf = gifti('data/Q1-Q6_R440.R.midthickness.32k_fs_LR.surf.gii');
+            aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/fsaverage_LR32k/' sub '.R.aparc.a2009s.32k_fs_LR.label.gii']);
+        end
+        aparc = aparc.cdata;
+        noncortex = find(aparc == 0);
 
-	% To remove mesh problem
-	if hemi == 'R'
-    	noncortex = sort([noncortex; 27806; 27810; 128; 129; 27779; 27792; 27791; 27798; ...
-    		27785; 27786; 27793; 27799; 27804; 27809; 27805; 27799; 27800; 27806; 27810; 27810 ]);
-	end
-	
+        % To remove mesh problem
+        if hemi == 'R'
+            noncortex = sort([noncortex; 27806; 27810; 128; 129; 27779; 27792; 27791; 27798; ...
+                27785; 27786; 27793; 27799; 27804; 27809; 27805; 27799; 27800; 27806; 27810; 27810 ]);
+        end
+
     case '164'
-	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.midthickness.164k_fs_LR.surf.gii'];
-	surf = gifti(filename);
-	filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.very_inflated.164k_fs_LR.surf.gii'];
-	surf_gii = gifti(filename);
-	surfvi.coord = surf_gii.vertices'; surfvi.tri = surf_gii.faces;
+        filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.midthickness.164k_fs_LR.surf.gii'];
+        surf = gifti(filename);
+        filename = ['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub '.L.very_inflated.164k_fs_LR.surf.gii'];
+        surf_gii = gifti(filename);
+        surfvi.coord = surf_gii.vertices'; surfvi.tri = surf_gii.faces;
 
-	aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub ...
-		'.L.aparc.a2009s.164k_fs_LR.label.gii']);
-	aparc = aparc.cdata;
-	noncortex = find(aparc == 0);
-	
+        aparc = gifti(['/a/documents/connectome/_all/' sub '/MNINonLinear/' sub ...
+            '.L.aparc.a2009s.164k_fs_LR.label.gii']);
+        aparc = aparc.cdata;
+        noncortex = find(aparc == 0);
+
     case 'freesurfer'
-	filename = sub;
-	surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
-	surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
-	% find midpoint
-	surf.coord = (surfp.coord + surfw.coord) ./ 2;
-	surf.faces = surfp.tri;
-	surf.vertices = surf.coord';
-	c = read_label(sub,[hemi '.cortex']);
-    cortex = c(:,1) + 1; clear c;
-	noncortex = setdiff(1:length(surf.vertices),cortex);
+        filename = sub;
+        surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
+        surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
+        % find midpoint
+        surf.coord = (surfp.coord + surfw.coord) ./ 2;
+        surf.faces = surfp.tri;
+        surf.vertices = surf.coord';
+        c = read_label(sub,[hemi '.cortex']);
+        cortex = c(:,1) + 1; clear c;
+        noncortex = setdiff(1:length(surf.vertices),cortex);
 end
 
 index1 = ismember(surf.faces(:,1),noncortex);

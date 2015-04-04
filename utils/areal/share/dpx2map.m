@@ -234,7 +234,7 @@ cidx(didx) = ceil(1 + (dpx(didx) - dpxmin) ...
     * (mapsize - 1) / (dpxmax - dpxmin));
 
 % Define the colourmap
-mapsize=length(unique(dpx));
+%mapsize=length(unique(dpx));
 rgb = eval(sprintf('%s(%f);',v.mapname, mapsize));
 %rgb = v.mapname;
 mapsize = size(rgb,1);

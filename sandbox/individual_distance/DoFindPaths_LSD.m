@@ -135,13 +135,13 @@ for s = 1:length(subjects)
         % look at results: 
         
         h = figure; SurfStatView([dist2mask.distanceMap{s,1,:}; dist2mask.distanceMap{s,2,:}], surf_ind);
-        saveas(h, [subject '.distanceMap.DMN.parietal.png']);
+        saveas(h, [subject '.distanceMap.DMN.parietal.' clust(c-1) '.png']);
         clf
         surf = SurfStatReadSurf({[dir1 'fsaverage5/surf/lh.inflated'], [dir1 'fsaverage5/surf/rh.inflated']}); 
         title = ['left: ' num2str(dist2mask.clusDMN(s,1)) ' right: ' num2str(dist2mask.clusDMN(s,2))];
         SurfStatView([squeeze(dist2mask.labelNetwork(s,1,:)); squeeze(dist2mask.labelNetwork(s,2,:))], surf, title);
-        saveas(h, [subject '.clusters.png']);        
+        saveas(h, [subject '.clusters.' clust(c-1) '.png']); 
+        close all
     end
 end
 save('dist2mask.mat','-v7.3','dist2mask');
-%close all

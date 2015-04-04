@@ -1,4 +1,4 @@
-function[cortex, noncortex] = loadCortex(hemi)
+function[cortex, noncortex] = loadCortex(hemi, surf)
 
 sub = [100307];
 
