@@ -69,6 +69,4 @@ for subject in subjects:
         sp.io.savemat((os.path.join(output_base_dir,'clusters_%s_%s_em%s_%s_%s.mat' % 
                 (str(subject), hemi, str(n_components_embedding), str(comp_min), str(comp_max)))), 
                 {'results':results})
-            
-'''
-
+                
