@@ -27,9 +27,9 @@ for subject in subjects:
             # remove noncortex:
             data = dataAll[cort,:]
             # norm and concatenate
-            dataNorm.extend((np.asarray((data - data.mean(axis=0)) / data.std(axis=0).squeeze())).transpose()) 
+            dataNorm.extend((data.transpose() - data.mean(axis=1)) / data.std(axis=1))
             del data
-        
+
         # get full ength of surface dataset for padding cluster results at end 
         fullsize = len(dataAll)
         del dataAll
@@ -69,4 +69,4 @@ for subject in subjects:
         sp.io.savemat((os.path.join(output_base_dir,'clusters_%s_%s_em%s_%s_%s.mat' % 
                 (str(subject), hemi, str(n_components_embedding), str(comp_min), str(comp_max)))), 
                 {'results':results})
-            
+                
