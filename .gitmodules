@@ -1,3 +1,9 @@
 [submodule "utils_py/braincolor"]
 	path = utils_py/braincolor
 	url = https://github.com/binarybottle/braincolor.git
+[submodule "utils_py/CoCoTools"]
+	path = utils_py/CoCoTools
+	url = https://github.com/cocotools/CoCoTools.git
+[submodule "utils/geo"]
+	path = utils/geo
+	url = https://github.com/jabooth/exactgeodesic.git
