@@ -5,7 +5,7 @@
 using namespace std;
 
 // To compile: 
-// g++s -Wall exactGeodesicMatrix.cpp -o exactGeodesicMatrix
+// g++ -Wall -I../geo exactGeodesicMatrix.cpp -o exactGeodesicMatrix
 
 // Step 1: Convert surface to ascii
 // mris_convert [surface] [surface_tmp.asc]
