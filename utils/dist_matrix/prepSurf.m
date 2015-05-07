@@ -61,15 +61,13 @@ surfN.faces = surf.faces(index == 0,:);
 surfN.vertices = surf.vertices(incld,:);
 new = 1:length(incld);
 surfN.faces = reshape(new(r2), size(surfN.faces));
-vertices=surfN.vertices;
-faces=surfN.faces;
-N = length(vertices);
+
 
 %% Write out:
 h = fopen([outputPrefix '.asc'],'w');
 fprintf(h, '%5d %5d\n', [length(surfN.vertices) length(surfN.faces)]);
-fprintf(h, '%4.3f\t%4.3f\t%4.3f\n',surfN.vertices);
-fprintf(h, '%5i\t%5i\t%5i\n', surfN.faces-1);
+fprintf(h, '%4.3f\t%4.3f\t%4.3f\n',surfN.vertices');
+fprintf(h, '%5i\t%5i\t%5i\n', (surfN.faces-1)');
 fclose(h);
 
 save([outputPrefix '_incld.mat'],'-v7.3','incld');
