@@ -1,6 +1,7 @@
-function [] = prepSurf(surfType, hemi, sub, remove, outputPrefix)
+function [surf] = prepSurf(surfType, hemi, sub, remove, outputPrefix)
 % surfType = '32' or '164' or 'freesurfer'
 % hemi = 'L' or 'R'
+% remove = 'medial' or 'both'
 
 switch surfType
     case '32'
@@ -40,7 +41,6 @@ switch surfType
         noncortex = find(aparc == 0);
 
     case 'freesurfer'
-        filename = sub;
         surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
         surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
         % find midpoint
@@ -71,4 +71,5 @@ fprintf(h, '%5i\t%5i\t%5i\n', (surfN.faces-1)');
 fclose(h);
 
 save([outputPrefix '_incld.mat'],'-v7.3','incld');
+
 

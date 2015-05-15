@@ -5,7 +5,7 @@
 using namespace std;
 
 // To compile: 
-// g++ -Wall -I../geo exactGeodesicMatrix.cpp -o exactGeodesicMatrix
+// g++ -Wall -I../geodesic exactGeodesicMatrix.cpp -o exactGeodesicMatrix
 
 // Step 1: Convert surface to ascii
 // mris_convert [surface] [surface_tmp.asc]
@@ -24,9 +24,9 @@ using namespace std;
 // BEGIN //
 int main(int argc, char **argv) 
 {
-	if(argc < 5)
+	if(argc < 6)
 	{
-		std::cout << "usage: ./exactGeodesicMatrix [surface.asc] [/output directory/] [output filename prefix] [node to run]" << std::endl; 
+		std::cout << "usage: ./exactGeodesicMatrix [surface.asc] [/output directory/] [output filename prefix] [index file] [node to run]" << std::endl; 
 		return 0;
 	}	
 	std::vector<double> points;	
@@ -36,21 +36,35 @@ int main(int argc, char **argv)
 	mesh.initialize_mesh_data(points, faces);
 	geodesic::GeodesicAlgorithmExact algorithm(&mesh);
     	std::ostringstream fileNameStream("");
-	fileNameStream << argv[2] << argv[3] << argv[4] << ".txt";
+	fileNameStream << argv[2] << argv[3] << argv[5] << ".txt";
 	std::string fileName = fileNameStream.str();	
 	ofstream outputFile;
 	outputFile.open(fileName.c_str());
-	unsigned source_vertex_index = atol(argv[4]);	
-	geodesic::SurfacePoint source(&mesh.vertices()[source_vertex_index]);
+	
+	// Read index file:
+	std::vector<unsigned> indices;
+	ifstream indexfile(argv[4]);
+	unsigned line;
+	while ( indexfile >> line ) { //std::getline(indexfile,line)) {
+		indices.push_back(line);
+	}
+	indexfile.close();
+
+	unsigned source_vertex_index = atol(argv[5]);	
+	geodesic::SurfacePoint source(&mesh.vertices()[indices[source_vertex_index]]);
 	std::vector<geodesic::SurfacePoint> all_sources(1,source);
-	algorithm.propagate(all_sources);	
-	for(unsigned i=source_vertex_index; i<mesh.vertices().size(); ++i) 
+	algorithm.propagate(all_sources);
+
+	// get distance:
+	// change source_vertex_index to 0 to get all nodes for each run
+	for(unsigned i=source_vertex_index; i<indices.size(); ++i) 
 	{
-		geodesic::SurfacePoint p(&mesh.vertices()[i]);		
+		geodesic::SurfacePoint p(&mesh.vertices()[indices[i]]);		
 		double distance;
 		unsigned best_source = algorithm.best_source(p,distance);
 		outputFile << distance << std::endl;			
 	}
-outputFile.close();
-return 0;
-}	
+	outputFile.close();	
+	return 0;
+}
+
