@@ -1,113 +1,130 @@
 #!/usr/bin/python
 
-import os, numpy as np, scipy as sp
-import nibabel as nib
+import os, glob, subprocess, h5py
+import numpy as np, scipy as sp, pandas as pd, nibabel as nib
+import nipype.interfaces.freesurfer as fs
 from surfer import Brain
-import h5py
-from sklearn import preprocessing
-from sklearn.utils.arpack import eigsh  
+from sklearn.utils.arpack import eigsh
 
-# Set defaults:
+# Set defaults
 dataDir = '/afs/cbs.mpg.de/projects/mar005_lsd-lemon-surf/probands'
 fsDir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer'
-output_base_dir = '/scr/liberia1'
-subject = ['26410']
+outDir = '/scr/liberia1/temp'
+out_file = '%s/individual_dist_label_20150624.txt' % outDir
+fwhm = 10 # for smoothing fiedler vector
 
 
-def vizBrain(data, subject_id='fsaverage5', hemi='lh', surface='pial', filename='brain.png'):
-    brain = Brain(subject_id, hemi, surface)
-    dmin = data.min()#+(data.std()/2)
-    dmax = data.max()#-(data.std()/2)
-    brain.add_data(data, dmin, dmax, colormap="hot", alpha=0.7)
+# functions
+
+def img2disc(data, foci=False, labelfile=False, hemi='lh', filename='temp.png'):
+    brain = Brain('fsaverage5', hemi, 'inflated', curv=False)
+    brain.add_data(data, data.min(), data.max(), colormap="spectral", alpha=0.6)
+    if labelfile:
+        brain.add_label(labelfile, borders=True, color='grey')
+    if foci:
+        brain.add_foci(foci, coords_as_verts=True, scale_factor=.7, color='black')
     brain.save_montage(filename, order=['lat', 'med'], orientation='h', border_size=10)
 
-def DoFiedler(conn):
+def runFiedler(conn):
     # prep for embedding
-    K = (conn + 1) / 2.  
-    v = np.sqrt(np.sum(K, axis=1)) 
-    A = K/(v[:, None] * v[None, :])  
+    K = (conn + 1) / 2.
+    v = np.sqrt(np.sum(K, axis=1))
+    A = K/(v[:, None] * v[None, :])
     del K
     A = np.squeeze(A * [A > 0])
-
     # diffusion embedding
     n_components_embedding = 2
-    lambdas, vectors = eigsh(A, k=n_components_embedding+1)  
+    lambdas, vectors = eigsh(A, k=n_components_embedding+1)
     del A
-    lambdas = lambdas[::-1]  
-    vectors = vectors[:, ::-1]  
-    psi = vectors/vectors[:, 0][:, None]  
-    lambdas = lambdas[1:] / (1 - lambdas[1:])  
-    embedding = psi[:, 1:(n_components_embedding + 1 + 1)] * lambdas[:n_components_embedding+1][None, :]  
-
+    lambdas = lambdas[::-1]
+    vectors = vectors[:, ::-1]
+    psi = vectors/vectors[:, 0][:, None]
+    lambdas = lambdas[1:] / (1 - lambdas[1:])
+    embedding = psi[:, 1:(n_components_embedding + 1 + 1)] * lambdas[:n_components_embedding+1][None, :]
     return embedding
 
+def runSmoothing(data, hemi, fwhm):
+    img = np.expand_dims(data, axis=0)
+    img = np.expand_dims(img, axis=0)
+    img = nib.freesurfer.mghformat.MGHImage(img.astype(float32), affine=None)
+    img.to_filename('./temp1.mgz')
+    smoothing = fs.SurfaceSmooth(subjects_dir=fsDir,
+                                 subject_id='fsaverage5',
+                                 in_file='./temp1.mgz',
+                                 out_file='./temp2.mgz',
+                                 hemi=hemi,
+                                 fwhm=fwhm,
+                                 cortex=True,
+                                 terminal_output='none')
+    smoothing.run()
+    out = nib.load('./temp2.mgz').get_data().squeeze()
+    os.remove('./temp2.mgz')
+    os.remove('./temp1.mgz')
+    return out
+
+def runExtrema(data, hemi):
+    thmin = (abs(data).max() - 1.5*abs(data).std())
+    cluster = np.array([x if x > thmin else 0 for x in abs(data)])
+    cluster_img = np.expand_dims(cluster, axis=0)
+    cluster_img = np.expand_dims(cluster_img, axis=0)
+    cluster_img = nib.freesurfer.mghformat.MGHImage(cluster_img.astype(float32), affine=None)
+    cluster_img.to_filename('./temp.mgz')
+    cml = 'mri_surfcluster --in ./temp.mgz --subject fsaverage5 --hemi %s --thmin %s --annot aparc.a2009s --sum ./temp.log' % (hemi, thmin)
+    subprocess.call(cml, shell=True)
+    extrema_log = pd.read_csv('./temp.log', skiprows=34, skipinitialspace=21, header=None, dtype={0:np.str})
+    extrema_vertices = [int(extrema_log[0].iloc[i][15:25]) for i in range(len(extrema_log))]
+    os.remove('./temp.log')
+    os.remove('./temp.mgz')
+    return extrema_vertices
 
 
-    
-for subject in subjects:
+
+output_dict = {'subject': [], 'dist_A1_parietal': [], 'dist_V1_parietal': [], 'hemisphere': []}
+
+
+for subject in [sub for sub in os.listdir(dataDir) if os.path.isdir(os.path.join(dataDir, sub))]:
     for hemi in ['lh', 'rh']:
-        
-        # read in data
-        cort = np.sort(fs.io.read_label('%s/fsaverage5/label/%s.cortex.label' % (fsDir, hemi)))
-        dataCorr = np.load('%s/%s/correlation_maps/%s_lsd_corr_1ab_fsa5_%s.npy' % (dataDir, subject, subject, hemi))
-        fullsize = len(dataCorr)
-        
-        distFile = '%s/%s/distance_maps/%s_%s_geoDist_fsa5.mat' % (dataDir, subject, subject, hemi)
-        with h5py.File(distFile, 'r') as f:
-                dist = f['dataAll'][()]
-        dist = dist[cort, :][:, cort]
-        min_max_scaler = preprocessing.MinMaxScaler()
-        dist_scaled = min_max_scaler.fit_transform(dist)
-        del dist        
-        distmat = np.zeros((fullsize, fullsize))
-        distmat[np.ix_(cort, cort)] = dist_scaled
-        del dist_scaled
-        
-        
-        # embedding
-        embedding = DoFiedler(dataCorr[cort, :][:, cort]) # see below for details
-        del dataCorr
-        # reinsert zeros:
-        fiedler = np.zeros(fullsize)
-        fiedler[cort] = embedding[:,1] # before this was embedding[:,0], 
-        # but changed to 1 since fiedler vector is the vector belonging second smallest eigenvalue
-       
-         
-        # TODO: use individual-specific annot file, need to be transformed from individual space to fsa5 space
-        fs_annot = fs.io.read_annot('/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer/fsaverage5/label/lh.aparc.a2009s.annot')#'%s/%s/label/%s.aparc.a2009s.annot' % (fsDir, subject, hemi))
-        index = [i for i, s in enumerate(list(fs_annot[2])) if 'G_pariet_inf-Angular' in s]
-        label_parietal =  fs_annot[0] == index
-        masked_fiedler = fiedler * label_parietal
-        parietal_index = np.where(masked_fiedler == max(masked_fiedler))
-        # changed np.mean(fiedler) to np.mean(np.nonzero(fiedler)), is that correct?
-        if np.mean(np.nonzero(masked_fiedler)) > np.mean(np.nonzero(fiedler)):
-            parietal_index = np.where(masked_fiedler == max(masked_fiedler))
-        else:
-            parietal_index = np.where(masked_fiedler == min(masked_fiedler))  
-        
-        # TODO: add this as second overlay to surface instead of changing value in masked_fiedler
-        masked_fiedler[parietal_index] = 1
-        vizBrain(masked_fiedler) # TODO: save to disc for qc
-        
-        
-        label_list = ['S_calcarine'] # TODO: add other labels
-        g = 0
-        indices = [i for i, s in enumerate(list(fs_annot[2])) if label_list[g] in s]
-        label_dist = np.min(distmat[np.where(fs_annot[0] == indices),:], axis=1).squeeze()
-        # TODO: add this as second overlay to surface instead of changing value in label_dist
-        label_dist[parietal_index] = 1
-        vizBrain(label_dist) # TODO: save to disc
-                
-        
-        
-        
-        
-        
-        
-        
-        
-        # save out anat_dist for subject / hemi / anat label
-        # also create images for quality control: fiedler, masked_fiedler
 
+        # set file names and location
+        corr_file = '%s/%s/correlation_maps/%s_lsd_corr_1ab_fsa5_%s.npy' % (dataDir, subject, subject, hemi)
+        dist_file = '%s/%s/distance_maps/%s_%s_geoDist_fsa5.mat' % (dataDir, subject, subject, hemi)
+        parietal_label_file = '%s/%s/labels/fsa5/%s.G_pariet_inf-Angular_fsa5.label' % (dataDir, subject, hemi)
+        V1_label_file = '%s/%s/labels/fsa5/%s.S_calcarine_fsa5.label' % (dataDir, subject, hemi)
+        A1_label_file = '%s/%s/labels/fsa5/%s.G_temp_sup-G_T_transv_fsa5.label' % (dataDir, subject, hemi)
+        img1_name = '%s/%s_extrema_parietal_label_%s.png' % (outDir, subject, hemi)
+        img2_name = '%s/%s_parietal_peak_%s.png' % (outDir, subject, hemi)
+        
 
+        if not False in [os.path.isfile(i) for i in [corr_file, dist_file, parietal_label_file, V1_label_file, A1_label_file]]:
+            
+            print '\n\n' + subject
 
+            # read in data
+            cort = np.sort(nib.freesurfer.io.read_label('%s/fsaverage5/label/%s.cortex.label' % (fsDir, hemi)))
+            corr = np.load(corr_file)
+            with h5py.File(dist_file, 'r') as f:
+                    dist = f['dataAll'][()]
+            parietal_vertices = np.sort(nib.freesurfer.io.read_label(parietal_label_file))
+            V1_vertices = np.sort(nib.freesurfer.io.read_label(V1_label_file))
+            A1_vertices = np.sort(nib.freesurfer.io.read_label(A1_label_file))
+
+            # fiedler vector
+            fiedler = np.zeros(len(corr))
+            fiedler[cort] = runFiedler(corr[cort, :][:, cort])[:,0]
+            del corr
+            # smoothing, finding local extrema
+            f_smoothed = runSmoothing(fiedler, hemi, fwhm)
+            f_extrema_vertices = runExtrema(f_smoothed, hemi)
+            img2disc(f_smoothed, foci=f_extrema_vertices, labelfile=parietal_label_file, filename=img1_name, hemi=hemi)
+            # get local peak that is closest to parietal label
+            dist_extrema_2_parietal = [np.mean(dist[parietal_vertices, i]) for i in f_extrema_vertices]
+            parietal_peak_vertex = f_extrema_vertices[dist_extrema_2_parietal.index(min(dist_extrema_2_parietal))]
+            img2disc(f_smoothed, foci=parietal_peak_vertex, filename=img2_name, hemi=hemi)
+
+            # save results
+            output_dict['subject'].append(subject)
+            output_dict['hemisphere'].append(hemi)
+            output_dict['dist_V1_parietal'].append(dist[V1_vertices, parietal_peak_vertex].mean())
+            output_dict['dist_A1_parietal'].append(dist[A1_vertices, parietal_peak_vertex].mean())
+            
+pd.DataFrame(output_dict).to_csv(out_file, sep='\t', index=False, columns=['subject', 'hemisphere', 'dist_V1_parietal', 'dist_A1_parietal'])
