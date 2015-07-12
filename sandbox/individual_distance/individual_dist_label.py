@@ -8,7 +8,7 @@ import os
 # Set defaults
 dataDir = '/afs/cbs.mpg.de/projects/mar005_lsd-lemon-surf/probands'
 fsDir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer'
-out_file = '/scr/liberia1/individual_dist_label/res_individual_dist_label_20150707.txt'
+out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_lh_20150709.txt'
 
 
 ### !!! hemi needs to be changed within function !!! ###
@@ -17,7 +17,7 @@ out_file = '/scr/liberia1/individual_dist_label/res_individual_dist_label_201507
 
 def run_individual_dist_label(subject):    
     
-    hemi = 'lh'
+    hemi = 'rh'
     import os, glob, subprocess, h5py
     import numpy as np, pandas as pd, nibabel as nib
     import nipype.interfaces.freesurfer as fs
@@ -26,7 +26,7 @@ def run_individual_dist_label(subject):
 
     dataDir = '/afs/cbs.mpg.de/projects/mar005_lsd-lemon-surf/probands'
     fsDir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer'
-    outDir = '/scr/liberia1/individual_dist_label'
+    outDir = '/scr/liberia1/data/individual_dist_label'
     
     def img2disc(data, foci=False, labelfile=False, hemi='lh', filename='temp.png'):
         brain = Brain('fsaverage5', hemi, 'inflated', curv=False)
@@ -142,7 +142,7 @@ def run_individual_dist_label(subject):
         parietal_peak_vertex = f_extrema_vertices[dist_extrema_2_parietal.index(min(dist_extrema_2_parietal))]
         dist_extrema_2_temporal = [np.mean(dist[temppole_vertices, i]) for i in f_extrema_vertices]
         temporal_peak_vertex = f_extrema_vertices[dist_extrema_2_temporal.index(min(dist_extrema_2_temporal))]
-        img2disc(f_masked, foci=[parietal_peak_vertex, temporal_peak_vertex], hemi=hemi, filename=peak_img_file)
+        img2disc(f_smoothed, foci=[parietal_peak_vertex, temporal_peak_vertex], hemi=hemi, filename=peak_img_file)
 
         # return results
         V1_vertices = nib.freesurfer.io.read_label('%s/%s/labels/fsa5/%s.S_calcarine_fsa5.label' % (dataDir, subject, hemi))
@@ -161,12 +161,23 @@ def run_individual_dist_label(subject):
 
 # --------------------------------------------------------------------------------------------------------------------------------------------------
 
-### run ###
+### run serially ###
 
 subjects = [sub for sub in os.listdir(dataDir) if os.path.isdir(os.path.join(dataDir, sub))]
-
-p = Pool(20)
-res = p.map(run_individual_dist_label, subjects)    
 output_dict = {}
+res = []
+
+for subject in subjects:
+    res.append(run_individual_dist_label(subject))
+
 output_dict['subject'], output_dict['hemi'], output_dict['V1_parietal'], output_dict['A1_parietal'], output_dict['V1_temporal'], output_dict['A1_temporal'] = np.array(res).T    
 pd.DataFrame(output_dict).to_csv(out_file, sep='\t', index=False, columns=['subject', 'hemi', 'V1_parietal', 'A1_parietal', 'V1_temporal', 'A1_temporal'])
+    
+
+### run in parallel ### (not good for qc screenshots though)
+
+#p = Pool(20)
+#res = p.map(run_individual_dist_label, subjects)    
+#output_dict = {}
+#output_dict['subject'], output_dict['hemi'], output_dict['V1_parietal'], output_dict['A1_parietal'], output_dict['V1_temporal'], output_dict['A1_temporal'] = np.array(res).T    
+#pd.DataFrame(output_dict).to_csv(out_file, sep='\t', index=False, columns=['subject', 'hemi', 'V1_parietal', 'A1_parietal', 'V1_temporal', 'A1_temporal'])
