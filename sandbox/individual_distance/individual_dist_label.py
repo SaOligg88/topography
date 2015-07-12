@@ -8,7 +8,7 @@ import os
 # Set defaults
 dataDir = '/afs/cbs.mpg.de/projects/mar005_lsd-lemon-surf/probands'
 fsDir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer'
-out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_lh_20150709.txt'
+out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_rh_20150709.txt'
 
 
 ### !!! hemi needs to be changed within function !!! ###
