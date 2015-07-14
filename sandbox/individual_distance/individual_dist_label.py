@@ -8,7 +8,7 @@ import os
 # Set defaults
 dataDir = '/afs/cbs.mpg.de/projects/mar005_lsd-lemon-surf/probands'
 fsDir = '/afs/cbs.mpg.de/projects/mar004_lsd-lemon-preproc/freesurfer'
-out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_rh_20150709.txt'
+out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_lh_20150714.txt'
 
 
 ### !!! hemi needs to be changed within function !!! ###
@@ -17,7 +17,7 @@ out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_r
 
 def run_individual_dist_label(subject):    
     
-    hemi = 'rh'
+    hemi = 'lh'
     import os, glob, subprocess, h5py
     import numpy as np, pandas as pd, nibabel as nib
     import nipype.interfaces.freesurfer as fs
@@ -105,7 +105,8 @@ def run_individual_dist_label(subject):
     
         
     # file names and location
-    corr_file = '%s/%s/correlation_maps/%s_lsd_corr_1ab_fsa5_%s.npy' % (dataDir, subject, subject, hemi)
+    corr_file1 = '%s/%s/correlation_maps/%s_lsd_corr_1ab_fsa5_%s.npy' % (dataDir, subject, subject, hemi)
+    corr_file2 = '%s/%s/correlation_maps/%s_lsd_corr_2ab_fsa5_%s.npy' % (dataDir, subject, subject, hemi)
     dist_file = '%s/%s/distance_maps/%s_%s_geoDist_fsa5.mat' % (dataDir, subject, subject, hemi)
     parietal_label_file = '%s/%s/labels/fsa5/%s.G_pariet_inf-Angular_fsa5.label' % (dataDir, subject, hemi)
     temporal_label_file = '%s/%s/labels/fsa5/%s.Pole_temporal_fsa5.label' % (dataDir, subject, hemi)
@@ -120,7 +121,9 @@ def run_individual_dist_label(subject):
         #if not False in [os.path.isfile(i) for i in [corr_file, dist_file, parietal_label_file, temporal_label_file, V1_label_file, A1_label_file]]: 
         # read in data
         cort = np.sort(nib.freesurfer.io.read_label('%s/fsaverage5/label/%s.cortex.label' % (fsDir, hemi)))
-        corr = np.load(corr_file)
+        corr1 = np.load(corr_file1)
+        corr2 = np.load(corr_file2)
+        corr = (corr1+corr2) /2
         with h5py.File(dist_file, 'r') as f:
             dist = f['dataAll'][()]
         parietal_vertices = np.sort(nib.freesurfer.io.read_label(parietal_label_file))
@@ -131,7 +134,6 @@ def run_individual_dist_label(subject):
         # local extrema in fiedler vector
         fiedler = np.zeros(len(corr))
         fiedler[cort] = runFiedler(corr[cort, :][:, cort])[:,0]
-        np.save(fiedler_file, fiedler)
         del corr
         f_smoothed = runSmoothing(fiedler, hemi, subject)
         f_masked = runMasking(f_smoothed, hemi)
@@ -142,7 +144,15 @@ def run_individual_dist_label(subject):
         parietal_peak_vertex = f_extrema_vertices[dist_extrema_2_parietal.index(min(dist_extrema_2_parietal))]
         dist_extrema_2_temporal = [np.mean(dist[temppole_vertices, i]) for i in f_extrema_vertices]
         temporal_peak_vertex = f_extrema_vertices[dist_extrema_2_temporal.index(min(dist_extrema_2_temporal))]
-        img2disc(f_smoothed, foci=[parietal_peak_vertex, temporal_peak_vertex], hemi=hemi, filename=peak_img_file)
+        
+        # save standardized fiedler
+        if fiedler[parietal_peak_vertex] < 0:
+            f_stand = -fiedler
+        else:
+            f_stand = fiedler
+        
+        np.save(fiedler_file, f_stand)
+        img2disc(f_stand, foci=[parietal_peak_vertex, temporal_peak_vertex], hemi=hemi, filename=peak_img_file)
 
         # return results
         V1_vertices = nib.freesurfer.io.read_label('%s/%s/labels/fsa5/%s.S_calcarine_fsa5.label' % (dataDir, subject, hemi))
