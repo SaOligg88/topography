@@ -12,9 +12,9 @@ subjects_file = '/scr/liberia1/data/individual_dist_label/subjects_rest_surf_1a1
 out_file = '/scr/liberia1/data/individual_dist_label/res_individual_dist_label_nnb%s_%s_20150722.txt'
 
 hemis = ['lh', 'rh']
-n_neighbors_list = [50, 100, 150]
+n_neighbors_list = [100, 150, 50]
 
-### !!! hemi needs to be changed within function !!! ###
+
 
 # ----------------------------------- functions -----------------------------------
 
